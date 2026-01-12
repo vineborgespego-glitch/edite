@@ -1,0 +1,7 @@
+{
+  "name": "IAFinanceCRM",
+  "description": "Sistema de gestão financeira completo com dashboard, controle de receitas/despesas e suporte PWA.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
