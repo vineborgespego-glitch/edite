@@ -28,6 +28,22 @@ const App: React.FC = () => {
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Efeito para aplicar o tema do usuário ao mudar de perfil
+  useEffect(() => {
+    if (user) {
+      const userTheme = localStorage.getItem(`ia_finance_theme_user_${user.id}`);
+      if (userTheme) {
+        if (userTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        // Atualiza também o tema global para manter consistência no próximo carregamento
+        localStorage.setItem('ia_finance_theme', userTheme);
+      }
+    }
+  }, [user]);
+
   const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -182,13 +198,10 @@ const App: React.FC = () => {
     try {
       const orderBefore = orders.find(o => o.id_pedido === id);
       const identifier = `Pagamento Pedido #${id}`;
-      // Busca se já existe uma receita para este pedido
       const existingTx = transactions.find(t => t.tipo === 'receita' && t.descricao.startsWith(identifier));
 
-      // Lógica de Sincronização Financeira
       if (updates.pago !== undefined && user) {
         if (updates.pago === true && !existingTx) {
-          // Marcar como PAGO e não existia receita: CRIAR
           const orderItemsList = orderItems.filter(item => String(item.id_pedido) === String(id));
           const totalVal = orderItemsList.reduce((acc, item) => acc + parseFloat(item.total || '0'), 0);
           const clientName = clients.find(c => String(c.id) === String(orderBefore?.id_cliente || updates.id_cliente))?.nome || 'Cliente';
@@ -202,7 +215,6 @@ const App: React.FC = () => {
             tipo: 'receita'
           });
         } else if (updates.pago === false && existingTx) {
-          // Desmarcar como PAGO e existia receita: REMOVER (Estorno)
           await deleteTransaction(existingTx.id, 'receita');
         }
       }

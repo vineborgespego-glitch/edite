@@ -9,12 +9,30 @@ const ThemeToggle: React.FC = () => {
   const toggleTheme = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
+    
+    const themeStr = newMode ? 'dark' : 'light';
+    
+    // Aplica no DOM
     if (newMode) {
       document.documentElement.classList.add('dark');
-      localStorage.setItem('ia_finance_theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
-      localStorage.setItem('ia_finance_theme', 'light');
+    }
+
+    // Salva globalmente (para a tela de login)
+    localStorage.setItem('ia_finance_theme', themeStr);
+
+    // Salva especificamente para o usuário logado (se houver)
+    const savedUser = localStorage.getItem('ia_finance_user');
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser);
+        if (user && user.id) {
+          localStorage.setItem(`ia_finance_theme_user_${user.id}`, themeStr);
+        }
+      } catch (e) {
+        console.error("Erro ao salvar tema do usuário:", e);
+      }
     }
   };
 

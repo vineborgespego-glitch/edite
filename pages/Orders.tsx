@@ -254,26 +254,28 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
       </main>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end justify-center">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up border-t border-gray-100 dark:border-slate-800 overflow-y-auto max-h-[90vh] no-scrollbar transition-colors">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[70] flex items-end justify-center px-4 sm:px-0">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-6 sm:p-8 space-y-6 animate-slide-up border-t border-gray-100 dark:border-slate-800 overflow-y-auto max-h-[92vh] no-scrollbar shadow-2xl transition-colors">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-black text-gray-900 dark:text-white">Novo Pedido</h2>
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Informações de serviço</p>
               </div>
-              <button onClick={() => setShowModal(false)} className="w-10 h-10 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-gray-400">
+              <button onClick={() => setShowModal(false)} className="w-10 h-10 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
                 <i className="fa-solid fa-xmark text-lg"></i>
               </button>
             </div>
 
             <div className="flex p-1 bg-gray-100 dark:bg-slate-800 rounded-2xl">
               <button 
+                type="button"
                 onClick={() => setClientType('existing')}
                 className={`flex-1 py-3 text-xs font-bold rounded-xl transition-all ${clientType === 'existing' ? 'bg-white dark:bg-slate-700 text-violet-600 shadow-sm' : 'text-gray-500'}`}
               >
-                Cliente Existente
+                Existente
               </button>
               <button 
+                type="button"
                 onClick={() => setClientType('new')}
                 className={`flex-1 py-3 text-xs font-bold rounded-xl transition-all ${clientType === 'new' ? 'bg-white dark:bg-slate-700 text-violet-600 shadow-sm' : 'text-gray-500'}`}
               >
@@ -281,7 +283,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 pb-12">
               {clientType === 'existing' ? (
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Selecionar Cliente</label>
@@ -328,16 +330,16 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
               <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between px-1">
                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lista de Consertos</h3>
-                  <button type="button" onClick={addItemRow} className="text-violet-600 font-bold text-[10px] bg-violet-50 dark:bg-violet-900/20 px-3 py-1.5 rounded-full flex items-center space-x-1">
+                  <button type="button" onClick={addItemRow} className="text-violet-600 font-bold text-[10px] bg-violet-50 dark:bg-violet-900/20 px-3 py-1.5 rounded-full flex items-center space-x-1 hover:bg-violet-100 transition-colors">
                     <i className="fa-solid fa-plus text-[8px]"></i>
-                    <span>Adicionar Serviço</span>
+                    <span>Adicionar Item</span>
                   </button>
                 </div>
 
                 {items.map((item, index) => (
-                  <div key={index} className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-3xl space-y-3 relative border border-gray-100 dark:border-slate-800 group">
+                  <div key={index} className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-3xl space-y-3 relative border border-gray-100 dark:border-slate-800 group transition-all">
                     {items.length > 1 && (
-                      <button type="button" onClick={() => removeItemRow(index)} className="absolute -top-2 -right-2 w-7 h-7 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center text-[10px] shadow-sm">
+                      <button type="button" onClick={() => removeItemRow(index)} className="absolute -top-2 -right-2 w-7 h-7 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center text-[10px] shadow-sm hover:bg-red-500 hover:text-white transition-all">
                         <i className="fa-solid fa-trash"></i>
                       </button>
                     )}
@@ -345,13 +347,13 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                       <input
                         required
                         className="w-full p-3 bg-white dark:bg-slate-900 text-xs text-gray-900 dark:text-white rounded-xl border border-gray-100 dark:border-slate-700 outline-none focus:ring-1 focus:ring-violet-500 transition-all"
-                        placeholder="O que será feito? (Ex: Ajuste de barra)"
+                        placeholder="Descrição do serviço"
                         value={item.descreçao}
                         onChange={e => updateItem(index, 'descreçao', e.target.value)}
                       />
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
+                    <div className="grid grid-cols-12 gap-2">
+                      <div className="col-span-3">
                         <input
                           required
                           type="number"
@@ -361,19 +363,19 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                           onChange={e => updateItem(index, 'quantidade', e.target.value)}
                         />
                       </div>
-                      <div>
+                      <div className="col-span-4">
                         <input
                           required
                           type="number"
                           step="0.01"
                           className="w-full p-3 bg-white dark:bg-slate-900 text-xs text-gray-900 dark:text-white rounded-xl border border-gray-100 dark:border-slate-700 outline-none focus:ring-1 focus:ring-violet-500 transition-all"
-                          placeholder="Valor R$"
+                          placeholder="R$ Uni"
                           value={item.valor_unidade}
                           onChange={e => updateItem(index, 'valor_unidade', e.target.value)}
                         />
                       </div>
-                      <div className="flex items-center justify-end px-1">
-                        <span className="text-[11px] font-black text-gray-900 dark:text-white">
+                      <div className="col-span-5 flex items-center justify-end px-1">
+                        <span className="text-[11px] font-black text-gray-900 dark:text-white truncate">
                           {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(item.total))}
                         </span>
                       </div>
@@ -388,7 +390,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                     <i className={`fa-solid ${estaPago ? 'fa-wallet' : 'fa-hourglass'}`}></i>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Status Financeiro</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Financeiro</p>
                     <p className={`text-[11px] font-black uppercase ${estaPago ? 'text-green-600' : 'text-red-500'}`}>
                       {estaPago ? 'Pago Agora' : 'Pagar na Entrega'}
                     </p>
@@ -403,17 +405,17 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                 </button>
               </div>
 
-              <div className="bg-violet-600 p-6 rounded-[2.5rem] text-white flex justify-between items-center shadow-xl shadow-violet-100 dark:shadow-none">
-                <div>
+              <div className="bg-violet-600 p-6 rounded-[2.5rem] text-white flex flex-col sm:flex-row justify-between items-center gap-4 shadow-xl shadow-violet-100 dark:shadow-none">
+                <div className="w-full text-center sm:text-left">
                   <p className="text-[10px] font-bold uppercase opacity-70 tracking-widest mb-0.5">Total Estimado</p>
                   <p className="text-2xl font-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(grandTotal)}</p>
                 </div>
-                <div className="text-right">
-                   <p className="text-[10px] font-bold uppercase opacity-70 mb-1.5 tracking-widest">Previsão</p>
+                <div className="w-full text-center sm:text-right">
+                   <p className="text-[10px] font-bold uppercase opacity-70 mb-1.5 tracking-widest">Data de Previsão</p>
                    <input
                     required
                     type="date"
-                    className="bg-white/20 p-2.5 rounded-xl text-xs font-black outline-none border border-white/30 text-white placeholder-white"
+                    className="w-full sm:w-auto bg-white/20 p-2.5 rounded-xl text-xs font-black outline-none border border-white/30 text-white placeholder-white"
                     value={dataEntrega}
                     onChange={e => setDataEntrega(e.target.value)}
                   />
@@ -424,7 +426,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                 type="submit"
                 className="w-full py-5 bg-violet-600 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg hover:bg-violet-700 active:scale-95 transition-all mt-4"
               >
-                {clientType === 'new' ? 'Cadastrar Cliente e Iniciar' : 'Iniciar Conserto'}
+                {clientType === 'new' ? 'Cadastrar e Salvar Pedido' : 'Finalizar e Salvar Pedido'}
               </button>
             </form>
           </div>
