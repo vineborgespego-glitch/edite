@@ -3,6 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { User, Transaction } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, LabelList } from 'recharts';
 import { Link } from 'react-router-dom';
+import ThemeToggle from '../ThemeToggle';
 
 interface DashboardProps {
   user: User;
@@ -12,24 +13,12 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) => {
   const [isMounted, setIsMounted] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
+  const isDarkMode = document.documentElement.classList.contains('dark');
 
   useEffect(() => {
     const timer = setTimeout(() => setIsMounted(true), 150);
     return () => clearTimeout(timer);
   }, []);
-
-  const toggleTheme = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('ia_finance_theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('ia_finance_theme', 'light');
-    }
-  };
 
   const safeTransactions = transactions || [];
 
@@ -44,7 +33,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
     return { receitas, despesas, balanco };
   }, [userTransactions]);
 
-  // Lógica de agrupamento semanal para o mês atual
   const weeklyData = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -97,10 +85,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
     return Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(number);
   };
 
-  const recentTransactions = [...userTransactions]
-    .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
-    .slice(0, 5);
-
   const iaInsight = useMemo(() => {
     if (stats.receitas === 0) {
       return "Comece a registrar suas receitas para que eu possa analisar sua saúde financeira.";
@@ -119,18 +103,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
     return "Tudo sob controle! Seus gastos estão abaixo de 50% da sua receita. Continue com essa disciplina para garantir sua economia mensal.";
   }, [stats]);
 
-  // Cálculo de percentual de saúde financeira do mês
-  const healthPercent = useMemo(() => {
-    if (stats.receitas === 0) return 0;
-    const p = Math.round(((stats.receitas - stats.despesas) / stats.receitas) * 100);
-    return Math.max(0, Math.min(100, p));
-  }, [stats]);
-
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300 pb-24">
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300 pb-24 md:pb-6">
       <header className="bg-white dark:bg-slate-900 px-6 pt-12 pb-6 flex items-center justify-between sticky top-0 z-40 border-b border-gray-100 dark:border-slate-800 transition-colors">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
+          <Link to="/" className="w-10 h-10 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 rounded-xl flex items-center justify-center active:scale-90 transition-all border border-gray-100 dark:border-slate-700" title="Voltar ao Portal">
+            <i className="fa-solid fa-chevron-left"></i>
+          </Link>
+          <div className="hidden sm:flex w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-full items-center justify-center">
             <i className="fa-solid fa-user text-indigo-600 dark:text-indigo-400"></i>
           </div>
           <div>
@@ -139,19 +119,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
           </div>
         </div>
         <div className="flex items-center space-x-4">
-          <button 
-            onClick={toggleTheme} 
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-amber-400 hover:scale-110 active:scale-95 transition-all shadow-sm"
-          >
-            <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'} text-lg`}></i>
-          </button>
-          <button onClick={onLogout} className="text-gray-400 hover:text-red-500 transition-colors">
+          <ThemeToggle />
+          <button onClick={onLogout} className="text-gray-400 hover:text-red-500 transition-colors" title="Sair">
             <i className="fa-solid fa-right-from-bracket text-xl"></i>
           </button>
         </div>
       </header>
 
-      <main className="px-6 py-6 space-y-6">
+      <main className="px-6 py-6 space-y-6 max-w-7xl mx-auto w-full">
         {/* Card Principal de Saldo */}
         <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-100 dark:shadow-indigo-950/20 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
@@ -164,12 +139,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
               <i className="fa-solid fa-chart-line text-3xl opacity-50"></i>
             </div>
             
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="w-full flex-1 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                 <p className="text-[10px] text-indigo-100 uppercase tracking-wider font-bold mb-1">Entradas</p>
                 <p className="text-lg font-bold">{formatCurrency(stats.receitas)}</p>
               </div>
-              <div className="flex-1 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+              <div className="w-full flex-1 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                 <p className="text-[10px] text-indigo-100 uppercase tracking-wider font-bold mb-1">Saídas</p>
                 <p className="text-lg font-bold">{formatCurrency(stats.despesas)}</p>
               </div>
@@ -189,7 +164,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
         </div>
 
         {/* Botões de Ação Rápida */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className={`grid gap-4 ${user.role ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
           <Link to="/receitas" className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-gray-100 dark:border-slate-800 flex flex-col items-center justify-center space-y-2 hover:bg-gray-50 dark:hover:bg-slate-800 active:scale-95 transition-all shadow-sm group">
             <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-2xl flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">
               <i className="fa-solid fa-plus text-xl"></i>
@@ -202,6 +177,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
             </div>
             <span className="text-xs font-bold text-gray-700 dark:text-slate-300">Nova Despesa</span>
           </Link>
+          {user.role && (
+            <Link to="/usuarios" className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-gray-100 dark:border-slate-800 flex flex-col items-center justify-center space-y-2 hover:bg-gray-50 dark:hover:bg-slate-800 active:scale-95 transition-all shadow-sm group col-span-2 md:col-span-1">
+              <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <i className="fa-solid fa-users-gear text-xl"></i>
+              </div>
+              <span className="text-xs font-bold text-gray-700 dark:text-slate-300">Gerenciar Usuários</span>
+            </Link>
+          )}
         </div>
 
         {/* Gráfico Semanal e Resumo Total */}
@@ -245,42 +228,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
                 </ResponsiveContainer>
               ) : <div className="w-full h-full bg-gray-50 dark:bg-slate-800 animate-pulse rounded-2xl"></div>}
             </div>
-            
-            {/* Divisor Visual */}
-            <div className="h-px bg-gray-100 dark:bg-slate-800 my-6"></div>
-
-            {/* Parte final: Resumo Total do Mês */}
-            <div className="space-y-4">
-               <div className="flex justify-between items-end">
-                  <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status de Saúde do Mês</p>
-                    <h5 className="text-lg font-black text-gray-900 dark:text-white">
-                      {healthPercent > 0 ? `${healthPercent}% de lucro` : 'Mês no limite'}
-                    </h5>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Acumulado</p>
-                    <p className={`text-sm font-black ${stats.balanco >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatCurrency(stats.balanco)}
-                    </p>
-                  </div>
-               </div>
-               <div className="w-full h-2.5 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
-                  <div 
-                    className="h-full bg-green-500 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(34,197,94,0.3)]" 
-                    style={{ width: `${healthPercent}%` }}
-                  ></div>
-                  <div 
-                    className="h-full bg-red-500 opacity-20" 
-                    style={{ width: `${100 - healthPercent}%` }}
-                  ></div>
-               </div>
-               <p className="text-[10px] text-gray-500 dark:text-slate-500 font-medium text-center">
-                 {stats.balanco >= 0 
-                   ? "Parabéns! Você está economizando uma parte da sua renda este mês." 
-                   : "Atenção: Suas despesas estão consumindo todo o seu orçamento mensal."}
-               </p>
-            </div>
           </div>
 
           {/* Gráfico de Categorias */}
@@ -312,39 +259,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
               </div>
             </div>
           )}
-        </div>
-
-        {/* Atividades Recentes */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-black text-gray-800 dark:text-slate-300 uppercase tracking-widest">Atividades</h4>
-            <Link to="/receitas" className="text-indigo-600 dark:text-indigo-400 text-xs font-bold bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded-full">Ver tudo</Link>
-          </div>
-          
-          <div className="space-y-3">
-            {recentTransactions.length === 0 ? (
-              <div className="text-center bg-white dark:bg-slate-900 p-10 rounded-[2rem] border border-dashed border-gray-200 dark:border-slate-800">
-                <p className="text-gray-400 dark:text-slate-600 text-sm font-medium">Nenhuma atividade registrada.</p>
-              </div>
-            ) : (
-              recentTransactions.map((t) => (
-                <div key={t.id} className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-gray-100 dark:border-slate-800 flex items-center justify-between shadow-sm hover:border-indigo-100 dark:hover:border-indigo-900 transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.tipo === 'receita' ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
-                      <i className={t.tipo === 'receita' ? 'fa-solid fa-arrow-trend-up' : 'fa-solid fa-arrow-trend-down'}></i>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-gray-900 dark:text-slate-100 truncate max-w-[140px]">{t.descricao}</p>
-                      <p className="text-[10px] text-gray-400 dark:text-slate-500 font-bold uppercase tracking-tighter">{t.categoria} • {new Date(t.data).toLocaleDateString('pt-BR')}</p>
-                    </div>
-                  </div>
-                  <p className={`text-sm font-black ${t.tipo === 'receita' ? 'text-green-600' : 'text-red-600'}`}>
-                    {t.tipo === 'receita' ? '+' : '-'}{formatCurrency(t.valor)}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
         </div>
       </main>
     </div>

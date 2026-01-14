@@ -1,7 +1,8 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { User, Transaction } from '../types';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import ThemeToggle from '../ThemeToggle';
 
 interface ReceitasProps {
   user: User;
@@ -20,7 +21,15 @@ const Receitas: React.FC<ReceitasProps> = ({ user, transactions, onAdd, onDelete
   const [categoria, setCategoria] = useState('Barra Calça');
   const [data, setData] = useState(new Date().toISOString().split('T')[0]);
   
-  // Novos estados para o fluxo de pagamento
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('open') === 'true') {
+      setShowModal(true);
+    }
+  }, [location]);
+
   const [pagamentoTipo, setPagamentoTipo] = useState<PagamentoTipo>(null);
   const [cartaoSubtipo, setCartaoSubtipo] = useState<CartaoTipo>(null);
 
@@ -40,7 +49,6 @@ const Receitas: React.FC<ReceitasProps> = ({ user, transactions, onAdd, onDelete
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Formata o rótulo do pagamento para salvar na descrição ou categoria
     const labelPagamento = pagamentoTipo === 'dinheiro_pix' 
       ? '[PIX/Dinheiro]' 
       : `[Cartão ${cartaoSubtipo === 'credito' ? 'Crédito' : 'Débito'}]`;
@@ -73,12 +81,15 @@ const Receitas: React.FC<ReceitasProps> = ({ user, transactions, onAdd, onDelete
           </Link>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Receitas</h1>
         </div>
-        <button 
-          onClick={() => { resetForm(); setShowModal(true); }}
-          className="w-10 h-10 bg-green-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-green-100 dark:shadow-none active:scale-90 transition-all"
-        >
-          <i className="fa-solid fa-plus"></i>
-        </button>
+        <div className="flex items-center space-x-3">
+          <ThemeToggle />
+          <button 
+            onClick={() => { resetForm(); setShowModal(true); }}
+            className="w-10 h-10 bg-green-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-green-100 dark:shadow-none active:scale-90 transition-all"
+          >
+            <i className="fa-solid fa-plus"></i>
+          </button>
+        </div>
       </header>
 
       <main className="px-6 py-6 space-y-4">
@@ -95,7 +106,7 @@ const Receitas: React.FC<ReceitasProps> = ({ user, transactions, onAdd, onDelete
                   <i className="fa-solid fa-arrow-up"></i>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">{t.descricao}</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white truncate max-w-[150px]">{t.descricao}</p>
                   <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">{t.categoria} • {new Date(t.data).toLocaleDateString('pt-BR')}</p>
                 </div>
               </div>
@@ -121,7 +132,6 @@ const Receitas: React.FC<ReceitasProps> = ({ user, transactions, onAdd, onDelete
             </div>
 
             <form onSubmit={handleAdd} className="space-y-6">
-              {/* Descrição e Categoria */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1">Descrição do Serviço</label>
@@ -149,7 +159,6 @@ const Receitas: React.FC<ReceitasProps> = ({ user, transactions, onAdd, onDelete
                 </div>
               </div>
 
-              {/* Forma de Pagamento - Passo 1 */}
               <div className="space-y-3">
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1">Como foi pago?</label>
                 <div className="grid grid-cols-2 gap-3">
@@ -172,7 +181,6 @@ const Receitas: React.FC<ReceitasProps> = ({ user, transactions, onAdd, onDelete
                 </div>
               </div>
 
-              {/* Sub-opções Cartão - Passo 2 */}
               {pagamentoTipo === 'cartao' && (
                 <div className="space-y-3 animate-slide-in">
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1">Tipo de Cartão</label>
@@ -195,7 +203,6 @@ const Receitas: React.FC<ReceitasProps> = ({ user, transactions, onAdd, onDelete
                 </div>
               )}
 
-              {/* Valor e Data - Passo 3 */}
               {isValueVisible && (
                 <div className="grid grid-cols-2 gap-4 animate-slide-in">
                   <div>

@@ -1,7 +1,8 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { User, Transaction } from '../types';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import ThemeToggle from '../ThemeToggle';
 
 interface DespesasProps {
   user: User;
@@ -16,6 +17,15 @@ const Despesas: React.FC<DespesasProps> = ({ user, transactions, onAdd, onDelete
   const [valor, setValor] = useState('');
   const [categoria, setCategoria] = useState('Alimentação');
   const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('open') === 'true') {
+      setShowModal(true);
+    }
+  }, [location]);
 
   const list = useMemo(() => {
     return transactions.filter(t => t.tipo === 'despesa' && (user.role || t.user_id === user.id))
@@ -50,12 +60,15 @@ const Despesas: React.FC<DespesasProps> = ({ user, transactions, onAdd, onDelete
           </Link>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Despesas</h1>
         </div>
-        <button 
-          onClick={() => setShowModal(true)}
-          className="w-10 h-10 bg-red-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-red-100 dark:shadow-none active:scale-90 transition-all"
-        >
-          <i className="fa-solid fa-plus"></i>
-        </button>
+        <div className="flex items-center space-x-3">
+          <ThemeToggle />
+          <button 
+            onClick={() => setShowModal(true)}
+            className="w-10 h-10 bg-red-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-red-100 dark:shadow-none active:scale-90 transition-all"
+          >
+            <i className="fa-solid fa-plus"></i>
+          </button>
+        </div>
       </header>
 
       <main className="px-6 py-6 space-y-4">
@@ -72,7 +85,7 @@ const Despesas: React.FC<DespesasProps> = ({ user, transactions, onAdd, onDelete
                   <i className="fa-solid fa-arrow-down"></i>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">{t.descricao}</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white truncate max-w-[150px]">{t.descricao}</p>
                   <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">{t.categoria} • {new Date(t.data).toLocaleDateString('pt-BR')}</p>
                 </div>
               </div>

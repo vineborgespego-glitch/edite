@@ -3,6 +3,7 @@ import React from 'react';
 import { User } from '../types';
 import { SUPABASE_URL, SUPABASE_KEY } from '../App';
 import { Link } from 'react-router-dom';
+import ThemeToggle from '../ThemeToggle';
 
 interface UsuariosProps {
   users: User[];
@@ -31,17 +32,19 @@ const Usuarios: React.FC<UsuariosProps> = ({ users, onDelete }) => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors pb-20">
-      <header className="bg-white dark:bg-slate-900 px-6 pt-12 pb-6 sticky top-0 z-40 border-b border-gray-100 dark:border-slate-800 transition-colors">
+      <header className="bg-white dark:bg-slate-900 px-6 pt-12 pb-6 sticky top-0 z-40 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between transition-colors">
         <div className="flex items-center space-x-4">
           <Link to="/" className="w-10 h-10 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 rounded-xl flex items-center justify-center active:scale-90 transition-all border border-gray-100 dark:border-slate-700">
             <i className="fa-solid fa-chevron-left"></i>
           </Link>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Gerenciar Usuários</h1>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">Controle direto da base de dados Supabase</p>
+        <ThemeToggle />
       </header>
 
       <main className="px-6 py-6 space-y-4">
+        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium ml-1">Controle direto da base de dados Supabase</p>
+        
         {users.map(u => (
           <div key={u.id} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
             <div className="flex items-center space-x-3">

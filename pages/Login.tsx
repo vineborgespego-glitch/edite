@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User } from '../types';
 import { SUPABASE_URL, SUPABASE_KEY } from '../App';
+import ThemeToggle from '../ThemeToggle';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -49,7 +50,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-white dark:bg-slate-950 transition-colors">
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-white dark:bg-slate-950 transition-colors relative">
+      <div className="absolute top-6 right-6">
+        <ThemeToggle />
+      </div>
+      
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
           <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20">
