@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+// Importação explícita para resolver erro de tipo no ambiente
 import { Link, useNavigate } from 'react-router-dom';
 import { SUPABASE_URL, SUPABASE_KEY } from '../App';
 import ThemeToggle from '../ThemeToggle';

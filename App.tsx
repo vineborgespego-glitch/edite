@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
+// Usando HashRouter para evitar problemas de rota em ambientes de preview/sandbox
 import { HashRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { User, Transaction, Order, Client, OrderItem } from './types';
 import Login from './pages/Login';
@@ -28,7 +29,6 @@ const App: React.FC = () => {
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Efeito para aplicar o tema do usuário ao mudar de perfil
   useEffect(() => {
     if (user) {
       const userTheme = localStorage.getItem(`ia_finance_theme_user_${user.id}`);
@@ -38,7 +38,6 @@ const App: React.FC = () => {
         } else {
           document.documentElement.classList.remove('dark');
         }
-        // Atualiza também o tema global para manter consistência no próximo carregamento
         localStorage.setItem('ia_finance_theme', userTheme);
       }
     }

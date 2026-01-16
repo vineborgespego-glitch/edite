@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+// Importação explícita para resolver erro de tipo no ambiente
 import { Link } from 'react-router-dom';
 import { User } from '../types';
 import { SUPABASE_URL, SUPABASE_KEY } from '../App';

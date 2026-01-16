@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { User, Client } from '../types';
+// Importação explícita para resolver erro de tipo no ambiente
 import { Link } from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle';
 

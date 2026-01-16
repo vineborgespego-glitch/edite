@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { User, Order, Client, OrderItem } from '../types';
+// Importação explícita para resolver erro de tipo no ambiente
 import { Link } from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle';
 
@@ -16,6 +17,7 @@ interface OrdersProps {
 
 const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAdd, onAddClient, onUpdateOrder }) => {
   const [showModal, setShowModal] = useState(false);
+  const [printOrderId, setPrintOrderId] = useState<number | null>(null);
   const [filter, setFilter] = useState<Order['status'] | 'Todos'>('Todos');
   
   // Estados do Formulário
@@ -42,12 +44,21 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     return client ? client.nome : 'Cliente Desconhecido';
   };
 
+  const getClientPhone = (id_cliente: string) => {
+    const client = clients.find(c => String(c.id) === id_cliente);
+    return client ? client.numero : '';
+  };
+
   const getItemsForOrder = (id_pedido: number) => {
     return orderItems.filter(item => String(item.id_pedido) === String(id_pedido));
   };
 
   const calculateOrderTotal = (id_pedido: number) => {
     return getItemsForOrder(id_pedido).reduce((acc, item) => acc + parseFloat(item.total || '0'), 0);
+  };
+
+  const triggerPrint = () => {
+    window.print();
   };
 
   const addItemRow = () => {
@@ -143,6 +154,76 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     onUpdateOrder(order.id_pedido, { pago: !order.pago });
   };
 
+  // Renderiza o preview do recibo para o modal
+  const renderReceiptPreview = (id: number) => {
+    const order = orders.find(o => o.id_pedido === id);
+    if (!order) return null;
+    
+    const itemsInOrder = getItemsForOrder(id);
+    const totalVal = calculateOrderTotal(id);
+    const clientName = getClientName(order.id_cliente);
+    const clientPhone = getClientPhone(order.id_cliente);
+
+    return (
+      <div id="receipt-printable-content" className="receipt-paper bg-white text-slate-900 p-6 shadow-inner mx-auto max-w-[320px] font-mono border-t-4 border-violet-600">
+        <div className="text-center mb-6 border-b-2 border-dashed border-slate-300 pb-4">
+          <h2 className="text-xl font-black mb-0 tracking-tighter">IA FINANCE CRM</h2>
+          <p className="text-[9px] font-bold uppercase opacity-60">Serviços de Costura e Ajustes</p>
+        </div>
+        
+        <div className="text-[10px] space-y-1 mb-4">
+          <div className="flex justify-between">
+            <span className="font-bold">PEDIDO:</span>
+            <span>#{order.id_pedido}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-bold">DATA:</span>
+            <span>{new Date(order.created_at).toLocaleDateString('pt-BR')}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-bold">CLIENTE:</span>
+            <span className="truncate max-w-[150px]">{clientName}</span>
+          </div>
+          {clientPhone && (
+            <div className="flex justify-between">
+              <span className="font-bold">TEL:</span>
+              <span>{clientPhone}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-b border-dashed border-slate-300 py-3 mb-4">
+          <p className="text-[9px] font-black uppercase mb-2">Itens do Pedido:</p>
+          {itemsInOrder.map((item, idx) => (
+            <div key={idx} className="flex justify-between text-[10px] mb-1">
+              <span className="flex-1 pr-2">{item.quantidade}x {item.descreçao}</span>
+              <span className="font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(item.total))}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-between items-center mb-6">
+          <span className="text-[10px] font-black">TOTAL A PAGAR:</span>
+          <span className="text-lg font-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
+        </div>
+
+        <div className={`text-center py-2 px-4 border-2 rounded-lg mb-6 ${order.pago ? 'border-green-600 bg-green-50 text-green-700' : 'border-red-500 bg-red-50 text-red-600'}`}>
+          <span className="text-sm font-black tracking-widest uppercase">{order.pago ? 'PAGO' : 'PENDENTE'}</span>
+        </div>
+
+        <div className="text-center border-t border-dashed border-slate-300 pt-4">
+          <p className="text-[9px] font-bold uppercase mb-1">Previsão de Entrega:</p>
+          <p className="text-base font-black">{order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR'}</p>
+        </div>
+        
+        <div className="mt-8 text-center text-[8px] italic opacity-50">
+          <p>Obrigado pela confiança!</p>
+          <p>iafinance.cloud</p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors pb-24">
       <header className="bg-white dark:bg-slate-900 px-6 pt-12 pb-6 sticky top-0 z-40 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between transition-colors">
@@ -188,6 +269,8 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           filteredOrders.map(order => {
             const itemsInOrder = getItemsForOrder(order.id_pedido);
             const totalVal = calculateOrderTotal(order.id_pedido);
+            const clientName = getClientName(order.id_cliente);
+
             return (
               <div key={order.id_pedido} className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm space-y-4 relative overflow-hidden transition-all">
                 {order.pago && (
@@ -198,7 +281,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                 
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="font-black text-gray-900 dark:text-white truncate pr-2">{getClientName(order.id_cliente)}</h3>
+                    <h3 className="font-black text-gray-900 dark:text-white truncate pr-2">{clientName}</h3>
                     <div className="mt-1 space-y-0.5">
                       {itemsInOrder.slice(0, 3).map((item, idx) => (
                         <p key={idx} className="text-[10px] text-gray-500 font-medium truncate max-w-[180px]">
@@ -212,13 +295,22 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${statusColors[order.status]}`}>
                       {order.status === 'em concerto' ? 'Oficina' : order.status}
                     </span>
-                    <button 
-                      onClick={() => togglePago(order)}
-                      className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-lg border flex items-center space-x-1 ${order.pago ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 text-green-600' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-600'}`}
-                    >
-                      <i className={`fa-solid ${order.pago ? 'fa-check-circle' : 'fa-clock'}`}></i>
-                      <span>{order.pago ? 'Pago' : 'Pendente'}</span>
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        onClick={() => setPrintOrderId(order.id_pedido)}
+                        className="w-10 h-10 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 rounded-xl flex items-center justify-center hover:bg-violet-600 hover:text-white transition-all shadow-sm"
+                        title="Ver Recibo"
+                      >
+                        <i className="fa-solid fa-receipt text-sm"></i>
+                      </button>
+                      <button 
+                        onClick={() => togglePago(order)}
+                        className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-lg border flex items-center space-x-1 ${order.pago ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 text-green-600' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-600'}`}
+                      >
+                        <i className={`fa-solid ${order.pago ? 'fa-check-circle' : 'fa-clock'}`}></i>
+                        <span>{order.pago ? 'Pago' : 'Pendente'}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
                 
@@ -253,6 +345,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         )}
       </main>
 
+      {/* MODAL DE NOVO PEDIDO */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[70] flex items-end justify-center px-4 sm:px-0">
           <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-6 sm:p-8 space-y-6 animate-slide-up border-t border-gray-100 dark:border-slate-800 overflow-y-auto max-h-[92vh] no-scrollbar shadow-2xl transition-colors">
@@ -433,12 +526,89 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         </div>
       )}
 
+      {/* MODAL DE PRÉ-VISUALIZAÇÃO DE RECIBO */}
+      {printOrderId && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-lg z-[100] flex flex-col items-center justify-center p-6 sm:p-12 overflow-y-auto no-scrollbar">
+          <div className="w-full max-w-sm flex flex-col items-center">
+            <div className="w-full flex justify-between items-center mb-6 text-white px-2">
+              <div>
+                <h3 className="text-xl font-black">Pré-visualização</h3>
+                <p className="text-[10px] uppercase font-bold opacity-60 tracking-widest">Confira os dados antes de imprimir</p>
+              </div>
+              <button onClick={() => setPrintOrderId(null)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors">
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            
+            <div className="animate-in fade-in zoom-in duration-300 w-full">
+              {renderReceiptPreview(printOrderId)}
+            </div>
+
+            <div className="grid grid-cols-1 w-full gap-3 mt-8">
+              <button 
+                onClick={triggerPrint}
+                className="w-full py-5 bg-violet-600 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-violet-900/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-3"
+              >
+                <i className="fa-solid fa-print"></i>
+                <span>Imprimir Agora</span>
+              </button>
+              <button 
+                onClick={() => setPrintOrderId(null)}
+                className="w-full py-4 text-white/60 font-bold text-xs uppercase tracking-widest hover:text-white transition-colors"
+              >
+                Voltar aos Pedidos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes slide-in { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
         .animate-slide-up { animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .animate-slide-in { animation: slide-in 0.3s ease-out; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .receipt-paper {
+          position: relative;
+          filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));
+        }
+        
+        /* Efeito de papel serrilhado na base */
+        .receipt-paper::after {
+          content: "";
+          position: absolute;
+          bottom: -10px;
+          left: 0;
+          width: 100%;
+          height: 10px;
+          background: linear-gradient(-135deg, white 5px, transparent 0) 0 5px, linear-gradient(135deg, white 5px, transparent 0) 0 5px;
+          background-size: 10px 10px;
+          background-repeat: repeat-x;
+        }
+
+        @media print {
+          /* Esconde tudo exceto o conteúdo do recibo */
+          body * { visibility: hidden !important; }
+          #receipt-printable-content, #receipt-printable-content * { 
+            visibility: visible !important; 
+          }
+          #receipt-printable-content {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 40px !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
+          /* Remove decorações de preview na impressão real */
+          .receipt-paper::after { display: none; }
+          @page { margin: 0; }
+        }
       `}</style>
     </div>
   );

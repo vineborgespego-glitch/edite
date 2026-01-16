@@ -1,5 +1,6 @@
 
 import React from 'react';
+// Importação explícita para resolver erro de tipo no ambiente
 import { Link } from 'react-router-dom';
 import { User } from '../types';
 import ThemeToggle from '../ThemeToggle';

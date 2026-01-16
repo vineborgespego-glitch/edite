@@ -2,6 +2,7 @@
 import React from 'react';
 import { User } from '../types';
 import { SUPABASE_URL, SUPABASE_KEY } from '../App';
+// Importação explícita para resolver erro de tipo no ambiente
 import { Link } from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle';
 

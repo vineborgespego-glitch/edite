@@ -2,6 +2,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { User, Transaction } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, LabelList } from 'recharts';
+// Importação explícita para resolver erro de tipo no ambiente
 import { Link } from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle';
 
