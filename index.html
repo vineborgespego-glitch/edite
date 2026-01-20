@@ -30,46 +30,38 @@
         body { 
           font-family: 'Inter', sans-serif; 
           transition: background-color 0.3s ease, color 0.3s ease;
+          margin: 0;
         }
         .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
         .dark .glass-card { background: rgba(30, 41, 59, 0.95); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Garantir que o fundo mude suavemente */
         html, body { height: 100%; }
         .dark body { background-color: #0f172a; color: #f8fafc; }
     </style>
 <script type="importmap">
 {
   "imports": {
+    "recharts": "https://esm.sh/recharts@^3.6.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
     "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "recharts": "https://esm.sh/recharts@^3.6.0",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0"
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
+    "vite": "https://esm.sh/vite@^7.3.1"
   }
 }
 </script>
 </head>
 <body class="bg-gray-50 text-gray-900 transition-colors duration-300">
     <div id="root"></div>
+    <!-- Ponto de entrada do React para o Vite -->
+    <script type="module" src="/index.tsx"></script>
     <script>
-        // Inicialização do tema antes do React montar para evitar flickers
         const savedTheme = localStorage.getItem('ia_finance_theme');
         if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
-        }
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                const isSandbox = window.location.hostname.includes('ai.studio') || 
-                                 window.location.hostname.includes('usercontent.goog');
-                
-                if (!isSandbox) {
-                    navigator.serviceWorker.register('service-worker.js').catch(() => {});
-                }
-            });
         }
     </script>
 </body>
