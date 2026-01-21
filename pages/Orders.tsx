@@ -169,7 +169,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         <div className="text-center mb-6 border-b-4 border-dashed border-black pb-4">
           <h2 className="text-2xl font-black mb-1 tracking-tighter text-black uppercase leading-none">ATELIER EDITE BORGES</h2>
           <p className="text-[11px] font-black uppercase text-black">SERVIÇOS DE COSTURA E AJUSTES</p>
-          <p className="text-[10px] font-bold text-black mt-1">(41) 99593-7861</p>
         </div>
         
         <div className="text-[12px] space-y-1 mb-4 text-black font-bold">
@@ -203,7 +202,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           ))}
         </div>
 
-        <div className="flex justify-between items-center mb-6 text-black">
+        <div className="flex justify-between items-center mb-4 text-black">
           <span className="text-[12px] font-black">TOTAL A PAGAR:</span>
           <span className="text-2xl font-black underline decoration-2">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
         </div>
@@ -212,14 +211,40 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           <span className="text-lg font-black tracking-[0.2em] uppercase text-black">{order.pago ? '*** PAGO ***' : '--- PENDENTE ---'}</span>
         </div>
 
-        <div className="text-center border-t-2 border-dashed border-black pt-4 text-black">
+        <div className="text-center border-t-2 border-dashed border-black pt-4 text-black mb-6">
           <p className="text-[11px] font-black uppercase mb-1">Previsão de Entrega:</p>
           <p className="text-xl font-black">{order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR'}</p>
         </div>
+
+        {/* NOVA SEÇÃO DE INSTRUÇÕES E CONTATO CONFORME IMAGEM */}
+        <div className="space-y-4 text-black pt-2 border-t border-black">
+          <div className="space-y-1">
+            <p className="text-[11px] font-black text-center uppercase underline mb-2">Instruções</p>
+            <p className="text-[9px] font-bold leading-tight">1 - O pagamento pode ser realizado via PIX, em dinheiro ou no cartão à vista.</p>
+            <p className="text-[9px] font-bold leading-tight">2 - Caso o pedido não seja retirado em até 3 meses, ele poderá ser vendido, configurando desistência por parte do cliente.</p>
+            <p className="text-[9px] font-bold leading-tight">3 - O prazo para reconserto é de 15 dias após a data de entrega.</p>
+            <p className="text-[9px] font-bold leading-tight">4 - Em casos onde o cliente trouxer a peça já marcada, não será realizado reconserto.</p>
+          </div>
+
+          <div className="text-center space-y-1">
+            <p className="text-[10px] font-black uppercase">Contato e Localização</p>
+            <p className="text-[9px] font-bold">Endereço: Desembargador Otávio do Amaral, 547 - Bigorrilho</p>
+          </div>
+
+          <div className="text-center space-y-1 bg-black/5 p-2 rounded">
+            <p className="text-[10px] font-black uppercase">Horário de Funcionamento:</p>
+            <p className="text-[9px] font-bold">Segunda à Sexta: 09:00 - 18:00</p>
+          </div>
+
+          <div className="text-center pt-2 border-t border-dashed border-black">
+            <p className="text-xl font-black tracking-tighter">(41) 99593-7861 PIX</p>
+            <p className="text-[10px] font-bold mt-1 uppercase">Instagram: <span className="font-black">@borgesmariaedite</span></p>
+          </div>
+        </div>
         
-        <div className="mt-8 text-center text-[10px] font-black text-black border-t border-black pt-2">
+        <div className="mt-8 text-center text-[9px] font-black text-black opacity-40">
           <p>OBRIGADO PELA CONFIANÇA!</p>
-          <p className="mt-1">atelierediteborges.cloud</p>
+          <p>atelierediteborges.cloud</p>
         </div>
       </div>
     );
