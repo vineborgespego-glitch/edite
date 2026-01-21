@@ -62,8 +62,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
         </div>
         
-        <h1 className="text-2xl font-black text-gray-900 dark:text-white text-center mb-1">IAFinanceCRM</h1>
-        <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 text-center mb-8 uppercase tracking-widest">Atelier de Costura Edite Borges</p>
+        <h1 className="text-2xl font-black text-gray-900 dark:text-white text-center mb-1">Atelier Edite Borges</h1>
+        <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 text-center mb-8 uppercase tracking-widest tracking-widest">Gestão de Oficina e Finanças</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

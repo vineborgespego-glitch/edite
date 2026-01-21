@@ -1,8 +1,8 @@
 
 {
-  "name": "IAFinanceCRM",
+  "name": "Atelier Edite Borges",
   "short_name": "Atelier Edite",
-  "description": "CRM Financeiro - Atelier de Costura Edite Borges",
+  "description": "Gestão de Oficina e Finanças - Atelier de Costura Edite Borges",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

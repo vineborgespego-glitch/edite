@@ -165,16 +165,17 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     const clientPhone = getClientPhone(order.id_cliente);
 
     return (
-      <div id="receipt-printable-content" className="receipt-paper bg-white text-black p-6 shadow-inner mx-auto max-w-[320px] font-mono border-t-4 border-black">
-        <div className="text-center mb-6 border-b-2 border-dashed border-black pb-4">
-          <h2 className="text-xl font-black mb-0 tracking-tighter text-black">IA FINANCE CRM</h2>
-          <p className="text-[10px] font-black uppercase text-black">Serviços de Costura e Ajustes</p>
+      <div id="receipt-printable-content" className="receipt-paper bg-white text-black p-6 shadow-inner mx-auto max-w-[320px] font-mono border-t-8 border-black">
+        <div className="text-center mb-6 border-b-4 border-dashed border-black pb-4">
+          <h2 className="text-2xl font-black mb-1 tracking-tighter text-black uppercase leading-none">ATELIER EDITE BORGES</h2>
+          <p className="text-[11px] font-black uppercase text-black">SERVIÇOS DE COSTURA E AJUSTES</p>
+          <p className="text-[10px] font-bold text-black mt-1">(41) 99593-7861</p>
         </div>
         
-        <div className="text-[11px] space-y-1 mb-4 text-black font-bold">
+        <div className="text-[12px] space-y-1 mb-4 text-black font-bold">
           <div className="flex justify-between">
             <span className="font-black">PEDIDO:</span>
-            <span>#{order.id_pedido}</span>
+            <span className="font-black">#{order.id_pedido}</span>
           </div>
           <div className="flex justify-between">
             <span className="font-black">DATA:</span>
@@ -182,7 +183,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           </div>
           <div className="flex justify-between">
             <span className="font-black">CLIENTE:</span>
-            <span className="truncate max-w-[150px]">{clientName}</span>
+            <span className="truncate max-w-[150px] uppercase">{clientName}</span>
           </div>
           {clientPhone && (
             <div className="flex justify-between">
@@ -192,33 +193,33 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           )}
         </div>
 
-        <div className="border-t border-b border-dashed border-black py-3 mb-4">
-          <p className="text-[10px] font-black uppercase mb-2 text-black underline">Itens do Pedido:</p>
+        <div className="border-t-2 border-b-2 border-dashed border-black py-3 mb-4">
+          <p className="text-[11px] font-black uppercase mb-2 text-black underline">Itens do Pedido:</p>
           {itemsInOrder.map((item, idx) => (
-            <div key={idx} className="flex justify-between text-[11px] mb-1 text-black font-bold">
-              <span className="flex-1 pr-2">{item.quantidade}x {item.descreçao}</span>
+            <div key={idx} className="flex justify-between text-[12px] mb-1 text-black font-bold">
+              <span className="flex-1 pr-2 uppercase">{item.quantidade}x {item.descreçao}</span>
               <span className="font-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(item.total))}</span>
             </div>
           ))}
         </div>
 
         <div className="flex justify-between items-center mb-6 text-black">
-          <span className="text-[11px] font-black">TOTAL A PAGAR:</span>
-          <span className="text-xl font-black underline">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
+          <span className="text-[12px] font-black">TOTAL A PAGAR:</span>
+          <span className="text-2xl font-black underline decoration-2">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
         </div>
 
-        <div className={`text-center py-2 px-4 border-2 border-black rounded-lg mb-6 bg-white`}>
-          <span className="text-sm font-black tracking-widest uppercase text-black">{order.pago ? '*** PAGO ***' : '--- PENDENTE ---'}</span>
+        <div className={`text-center py-3 px-4 border-4 border-black rounded-lg mb-6 bg-white`}>
+          <span className="text-lg font-black tracking-[0.2em] uppercase text-black">{order.pago ? '*** PAGO ***' : '--- PENDENTE ---'}</span>
         </div>
 
-        <div className="text-center border-t border-dashed border-black pt-4 text-black">
-          <p className="text-[10px] font-black uppercase mb-1">Previsão de Entrega:</p>
-          <p className="text-lg font-black">{order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR'}</p>
+        <div className="text-center border-t-2 border-dashed border-black pt-4 text-black">
+          <p className="text-[11px] font-black uppercase mb-1">Previsão de Entrega:</p>
+          <p className="text-xl font-black">{order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR'}</p>
         </div>
         
-        <div className="mt-8 text-center text-[9px] font-bold text-black">
-          <p>Obrigado pela confiança!</p>
-          <p>iafinance.cloud</p>
+        <div className="mt-8 text-center text-[10px] font-black text-black border-t border-black pt-2">
+          <p>OBRIGADO PELA CONFIANÇA!</p>
+          <p className="mt-1">atelierediteborges.cloud</p>
         </div>
       </div>
     );
@@ -597,6 +598,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
             opacity: 1 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            font-weight: 900 !important;
           }
           #receipt-printable-content {
             position: absolute !important;
