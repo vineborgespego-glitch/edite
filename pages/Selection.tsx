@@ -10,12 +10,17 @@ interface SelectionProps {
 }
 
 const Selection: React.FC<SelectionProps> = ({ user, onLogout }) => {
-  const [logoSrc, setLogoSrc] = useState('logo.png');
+  const [logoSrc, setLogoSrc] = useState('./logo.png');
+  const [hasError, setHasError] = useState(false);
 
   const handleLogoError = () => {
-    if (logoSrc === 'logo.png') setLogoSrc('logo.jpg');
-    else if (logoSrc === 'logo.jpg') setLogoSrc('logo.jpeg');
-    else setLogoSrc('https://via.placeholder.com/150?text=Atelier+Logo');
+    if (logoSrc === './logo.png') {
+      setLogoSrc('./logo.jpg');
+    } else if (logoSrc === './logo.jpg') {
+      setLogoSrc('./logo.jpeg');
+    } else {
+      setHasError(true);
+    }
   };
 
   return (
@@ -26,13 +31,20 @@ const Selection: React.FC<SelectionProps> = ({ user, onLogout }) => {
 
       <div className="w-full max-w-4xl">
         <header className="flex flex-col items-center mb-12 text-center">
-          <div className="w-32 h-32 bg-white dark:bg-white rounded-full flex items-center justify-center shadow-xl mb-6 p-2 border-2 border-rose-50 overflow-hidden">
-            <img 
-              src={logoSrc} 
-              alt="Logo Atelier" 
-              className="w-full h-full object-contain"
-              onError={handleLogoError}
-            />
+          <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center shadow-xl mb-6 p-2 border-2 border-rose-50 overflow-hidden">
+            {!hasError ? (
+              <img 
+                key={logoSrc}
+                src={logoSrc} 
+                alt="Logo Atelier" 
+                className="w-full h-full object-contain animate-fade-in"
+                onError={handleLogoError}
+              />
+            ) : (
+              <div className="flex flex-col items-center text-rose-300">
+                <i className="fa-solid fa-scissors text-4xl"></i>
+              </div>
+            )}
           </div>
           <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Portal Atelier</h1>
           <p className="text-gray-500 dark:text-gray-400 font-medium italic">
@@ -98,6 +110,10 @@ const Selection: React.FC<SelectionProps> = ({ user, onLogout }) => {
           <span>Desconectar do Sistema</span>
         </button>
       </div>
+      <style>{`
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fade-in 0.5s ease-out; }
+      `}</style>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { User } from '../types';
 import { SUPABASE_URL, SUPABASE_KEY } from '../App';
@@ -14,7 +14,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [logoSrc, setLogoSrc] = useState('logo.png');
+  const [logoSrc, setLogoSrc] = useState('./logo.png');
+  const [hasError, setHasError] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,11 +51,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }
   };
 
-  // Tenta extensões diferentes se a principal falhar
   const handleLogoError = () => {
-    if (logoSrc === 'logo.png') setLogoSrc('logo.jpg');
-    else if (logoSrc === 'logo.jpg') setLogoSrc('logo.jpeg');
-    else setLogoSrc('https://via.placeholder.com/150?text=Atelier+Logo');
+    if (logoSrc === './logo.png') {
+      setLogoSrc('./logo.jpg');
+    } else if (logoSrc === './logo.jpg') {
+      setLogoSrc('./logo.jpeg');
+    } else {
+      setHasError(true);
+    }
   };
 
   return (
@@ -65,13 +69,21 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
-          <div className="w-40 h-40 bg-white dark:bg-white rounded-full flex items-center justify-center shadow-xl shadow-rose-100 dark:shadow-none p-2 border-2 border-rose-50 overflow-hidden">
-            <img 
-              src={logoSrc} 
-              alt="Atelier Edite Borges" 
-              className="w-full h-full object-contain"
-              onError={handleLogoError}
-            />
+          <div className="w-40 h-40 bg-white rounded-full flex items-center justify-center shadow-xl shadow-rose-100 dark:shadow-none p-2 border-2 border-rose-50 overflow-hidden relative">
+            {!hasError ? (
+              <img 
+                key={logoSrc}
+                src={logoSrc} 
+                alt="Atelier Edite Borges" 
+                className="w-full h-full object-contain animate-fade-in"
+                onError={handleLogoError}
+              />
+            ) : (
+              <div className="flex flex-col items-center text-rose-300">
+                <i className="fa-solid fa-scissors text-5xl"></i>
+                <span className="text-[8px] font-bold uppercase mt-2">Atelier Edite</span>
+              </div>
+            )}
           </div>
         </div>
         
@@ -135,6 +147,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </Link>
         </p>
       </div>
+      <style>{`
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fade-in 0.5s ease-out; }
+      `}</style>
     </div>
   );
 };
