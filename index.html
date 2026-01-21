@@ -6,11 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Atelier Edite Borges - Gestão</title>
     
-    <!-- PWA Primary Meta Tags -->
+    <!-- Configurações de Aplicativo -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Atelier Edite">
+    <meta name="application-name" content="Atelier Edite">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -32,6 +33,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" type="image/png" href="logo.png">
     <meta name="theme-color" content="#4f46e5">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -73,6 +75,13 @@
               document.documentElement.classList.add('dark');
           }
         } catch (e) {}
+        
+        // Registrar Service Worker imediatamente
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./service-worker.js');
+          });
+        }
     </script>
 </body>
 </html>
