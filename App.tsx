@@ -11,6 +11,7 @@ import Despesas from './pages/Despesas';
 import Usuarios from './pages/Usuarios';
 import Orders from './pages/Orders';
 import Clients from './pages/Clients';
+import InstallPWA from './components/InstallPWA';
 
 // Padrão Vite para variáveis de ambiente (exige prefixo VITE_)
 export const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://tzqtbezkqjodzhbptoky.supabase.co/rest/v1';
@@ -248,6 +249,9 @@ const App: React.FC = () => {
             <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
+        
+        <InstallPWA />
+
         <Routes>
           <Route path="/login" element={!user ? <Login onLogin={handleLogin} /> : <Navigate to="/" />} />
           <Route path="/register" element={!user ? <Register onRegister={() => fetchData()} /> : <Navigate to="/" />} />
