@@ -13,8 +13,8 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) => {
   const [isMounted, setIsMounted] = useState(false);
-  // Caminho absoluto com cache-busting
-  const [logoSrc, setLogoSrc] = useState(`/logo.png?t=${new Date().getTime()}`);
+  const [logoSrc, setLogoSrc] = useState('logo.png');
+  const [hasError, setHasError] = useState(false);
   const isDarkMode = document.documentElement.classList.contains('dark');
 
   useEffect(() => {
@@ -23,11 +23,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
   }, []);
 
   const handleLogoError = () => {
-    if (logoSrc.includes('logo.png')) {
-      setLogoSrc(`/logo.jpg?t=${new Date().getTime()}`);
-    } else {
-      setLogoSrc('https://via.placeholder.com/150?text=Atelier+Logo');
-    }
+    if (logoSrc === 'logo.png') setLogoSrc('logo.jpg');
+    else setHasError(true);
   };
 
   const safeTransactions = transactions || [];
@@ -99,13 +96,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
           <Link to="/" className="w-10 h-10 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 rounded-xl flex items-center justify-center active:scale-90 transition-all border border-gray-100 dark:border-slate-700">
             <i className="fa-solid fa-chevron-left"></i>
           </Link>
-          <div className="w-10 h-10 bg-white dark:bg-white rounded-xl flex items-center justify-center shadow-md p-0.5 border border-rose-50 overflow-hidden">
-            <img 
-              src={logoSrc} 
-              alt="Logo" 
-              className="w-full h-full object-contain" 
-              onError={handleLogoError}
-            />
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md p-0.5 border border-rose-50 overflow-hidden">
+            {!hasError ? (
+              <img 
+                src={logoSrc} 
+                alt="Logo" 
+                className="w-full h-full object-contain" 
+                onError={handleLogoError}
+              />
+            ) : (
+              <i className="fa-solid fa-scissors text-rose-500 text-sm"></i>
+            )}
           </div>
           <div>
             <h2 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{user.nome ? user.nome.split(' ')[0] : 'Usuário'}</h2>

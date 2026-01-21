@@ -10,17 +10,17 @@ interface SelectionProps {
 }
 
 const Selection: React.FC<SelectionProps> = ({ user, onLogout }) => {
-  const [logoSrc, setLogoSrc] = useState(`/logo.png?t=${new Date().getTime()}`);
+  const [logoSrc, setLogoSrc] = useState('logo.png');
   const [hasError, setHasError] = useState(false);
 
   const handleLogoError = () => {
-    if (logoSrc.includes('logo.png')) setLogoSrc(`/logo.jpg?t=${new Date().getTime()}`);
+    if (logoSrc === 'logo.png') setLogoSrc('logo.jpg');
     else setHasError(true);
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-[#fffafb] dark:bg-slate-950 transition-colors relative">
-      {/* HEADER SUPERIOR */}
+      {/* BRANDING NO CANTO */}
       <div className="absolute top-6 left-6 flex items-center">
         <div className="w-12 h-12 bg-white rounded-xl shadow-lg border border-rose-50 overflow-hidden flex items-center justify-center p-0.5">
           {!hasError ? (
