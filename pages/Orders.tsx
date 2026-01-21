@@ -1,7 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
 import { User, Order, Client, OrderItem } from '../types';
-// Importação explícita para resolver erro de tipo no ambiente
 import { Link } from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle';
 
@@ -154,7 +153,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     onUpdateOrder(order.id_pedido, { pago: !order.pago });
   };
 
-  // Renderiza o preview do recibo para o modal
   const renderReceiptPreview = (id: number) => {
     const order = orders.find(o => o.id_pedido === id);
     if (!order) return null;
@@ -165,13 +163,18 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     const clientPhone = getClientPhone(order.id_cliente);
 
     return (
-      <div id="receipt-printable-content" className="receipt-paper bg-white text-black p-6 shadow-inner mx-auto max-w-[320px] font-mono border-t-8 border-black">
-        <div className="text-center mb-6 border-b-4 border-dashed border-black pb-4">
-          <h2 className="text-2xl font-black mb-1 tracking-tighter text-black uppercase leading-none">ATELIER EDITE BORGES</h2>
-          <p className="text-[11px] font-black uppercase text-black">SERVIÇOS DE COSTURA E AJUSTES</p>
+      <div id="receipt-printable-content" className="receipt-paper bg-white text-black p-8 shadow-inner mx-auto max-w-[340px] font-mono border-t-[12px] border-black flex flex-col items-stretch">
+        {/* CABEÇALHO DA EMPRESA - REFORÇADO PARA VISIBILIDADE */}
+        <div className="text-center mb-6 border-b-4 border-dashed border-black pb-4 flex flex-col items-center">
+          <h2 className="text-[24px] font-[900] mb-1 tracking-tighter text-black uppercase leading-tight block w-full">
+            ATELIER EDITE BORGES
+          </h2>
+          <p className="text-[12px] font-bold uppercase text-black block w-full">
+            SERVIÇOS DE COSTURA E AJUSTES
+          </p>
         </div>
         
-        <div className="text-[12px] space-y-1 mb-4 text-black font-bold">
+        <div className="text-[13px] space-y-1 mb-4 text-black font-bold">
           <div className="flex justify-between">
             <span className="font-black">PEDIDO:</span>
             <span className="font-black">#{order.id_pedido}</span>
@@ -182,7 +185,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           </div>
           <div className="flex justify-between">
             <span className="font-black">CLIENTE:</span>
-            <span className="truncate max-w-[150px] uppercase">{clientName}</span>
+            <span className="truncate max-w-[160px] uppercase">{clientName}</span>
           </div>
           {clientPhone && (
             <div className="flex justify-between">
@@ -204,10 +207,10 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
 
         <div className="flex justify-between items-center mb-4 text-black">
           <span className="text-[12px] font-black">TOTAL A PAGAR:</span>
-          <span className="text-2xl font-black underline decoration-2">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
+          <span className="text-[22px] font-black underline decoration-2">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
         </div>
 
-        <div className={`text-center py-3 px-4 border-4 border-black rounded-lg mb-6 bg-white`}>
+        <div className="text-center py-3 px-4 border-4 border-black rounded-lg mb-6 bg-white">
           <span className="text-lg font-black tracking-[0.2em] uppercase text-black">{order.pago ? '*** PAGO ***' : '--- PENDENTE ---'}</span>
         </div>
 
@@ -216,35 +219,23 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           <p className="text-xl font-black">{order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR'}</p>
         </div>
 
-        {/* NOVA SEÇÃO DE INSTRUÇÕES E CONTATO CONFORME IMAGEM */}
         <div className="space-y-4 text-black pt-2 border-t border-black">
           <div className="space-y-1">
             <p className="text-[11px] font-black text-center uppercase underline mb-2">Instruções</p>
             <p className="text-[9px] font-bold leading-tight">1 - O pagamento pode ser realizado via PIX, em dinheiro ou no cartão à vista.</p>
-            <p className="text-[9px] font-bold leading-tight">2 - Caso o pedido não seja retirado em até 3 meses, ele poderá ser vendido, configurando desistência por parte do cliente.</p>
-            <p className="text-[9px] font-bold leading-tight">3 - O prazo para reconserto é de 15 dias após a data de entrega.</p>
-            <p className="text-[9px] font-bold leading-tight">4 - Em casos onde o cliente trouxer a peça já marcada, não será realizado reconserto.</p>
+            <p className="text-[9px] font-bold leading-tight">2 - Caso o pedido não seja retirado em até 3 meses, ele poderá ser vendido.</p>
+            <p className="text-[9px] font-bold leading-tight">3 - O prazo para reconserto é de 15 dias após a entrega.</p>
           </div>
 
           <div className="text-center space-y-1">
-            <p className="text-[10px] font-black uppercase">Contato e Localização</p>
-            <p className="text-[9px] font-bold">Endereço: Desembargador Otávio do Amaral, 547 - Bigorrilho</p>
-          </div>
-
-          <div className="text-center space-y-1 bg-black/5 p-2 rounded">
-            <p className="text-[10px] font-black uppercase">Horário de Funcionamento:</p>
-            <p className="text-[9px] font-bold">Segunda à Sexta: 09:00 - 18:00</p>
+            <p className="text-[10px] font-black uppercase">Localização</p>
+            <p className="text-[9px] font-bold">R. Desembargador Otávio do Amaral, 547 - Bigorrilho</p>
           </div>
 
           <div className="text-center pt-2 border-t border-dashed border-black">
             <p className="text-xl font-black tracking-tighter">(41) 99593-7861 PIX</p>
             <p className="text-[10px] font-bold mt-1 uppercase">Instagram: <span className="font-black">@borgesmariaedite</span></p>
           </div>
-        </div>
-        
-        <div className="mt-8 text-center text-[9px] font-black text-black opacity-40">
-          <p>OBRIGADO PELA CONFIANÇA!</p>
-          <p>atelierediteborges.cloud</p>
         </div>
       </div>
     );
@@ -307,8 +298,8 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                 
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="font-black text-gray-900 dark:text-white truncate pr-2">{clientName}</h3>
-                    <div className="mt-1 space-y-0.5">
+                    <h3 className="font-black text-gray-900 dark:text-white truncate pr-2 text-left">{clientName}</h3>
+                    <div className="mt-1 space-y-0.5 text-left">
                       {itemsInOrder.slice(0, 3).map((item, idx) => (
                         <p key={idx} className="text-[10px] text-gray-500 font-medium truncate max-w-[180px]">
                           • {item.descreçao} ({item.quantidade}x)
@@ -341,7 +332,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                 </div>
                 
                 <div className="flex items-center justify-between pt-3 border-t border-gray-50 dark:border-slate-800">
-                  <div>
+                  <div className="text-left">
                     <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Valor Total</p>
                     <p className="text-sm font-black text-violet-600 dark:text-violet-400">
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}
@@ -376,7 +367,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[70] flex items-end justify-center px-4 sm:px-0">
           <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-6 sm:p-8 space-y-6 animate-slide-up border-t border-gray-100 dark:border-slate-800 overflow-y-auto max-h-[92vh] no-scrollbar shadow-2xl transition-colors">
             <div className="flex items-center justify-between">
-              <div>
+              <div className="text-left">
                 <h2 className="text-xl font-black text-gray-900 dark:text-white">Novo Pedido</h2>
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Informações de serviço</p>
               </div>
@@ -404,7 +395,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
 
             <form onSubmit={handleSubmit} className="space-y-6 pb-12">
               {clientType === 'existing' ? (
-                <div>
+                <div className="text-left">
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Selecionar Cliente</label>
                   <div className="relative">
                     <select
@@ -422,7 +413,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4 animate-slide-in">
+                <div className="space-y-4 animate-slide-in text-left">
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nome Completo</label>
                     <input
@@ -446,7 +437,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                 </div>
               )}
 
-              <div className="space-y-4 pt-2">
+              <div className="space-y-4 pt-2 text-left">
                 <div className="flex items-center justify-between px-1">
                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lista de Consertos</h3>
                   <button type="button" onClick={addItemRow} className="text-violet-600 font-bold text-[10px] bg-violet-50 dark:bg-violet-900/20 px-3 py-1.5 rounded-full flex items-center space-x-1 hover:bg-violet-100 transition-colors">
@@ -504,7 +495,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
               </div>
 
               <div className="bg-gray-50 dark:bg-slate-800 p-5 rounded-3xl flex items-center justify-between border border-gray-100 dark:border-slate-700">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 text-left">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${estaPago ? 'bg-green-100 dark:bg-green-900/30 text-green-600' : 'bg-gray-200 dark:bg-slate-700 text-gray-400'}`}>
                     <i className={`fa-solid ${estaPago ? 'fa-wallet' : 'fa-hourglass'}`}></i>
                   </div>
@@ -552,25 +543,25 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         </div>
       )}
 
-      {/* MODAL DE PRÉ-VISUALIZAÇÃO DE RECIBO */}
+      {/* MODAL DE PRÉ-VISUALIZAÇÃO DE RECIBO - ATUALIZADO */}
       {printOrderId && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-lg z-[100] flex flex-col items-center justify-center p-6 sm:p-12 overflow-y-auto no-scrollbar">
-          <div className="w-full max-w-sm flex flex-col items-center">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] flex flex-col items-center justify-start p-6 sm:p-12 overflow-y-auto no-scrollbar">
+          <div className="w-full max-w-[360px] flex flex-col items-center">
             <div className="w-full flex justify-between items-center mb-6 text-white px-2">
-              <div>
-                <h3 className="text-xl font-black">Pré-visualização</h3>
-                <p className="text-[10px] uppercase font-bold opacity-60 tracking-widest">Confira os dados antes de imprimir</p>
+              <div className="text-left">
+                <h3 className="text-xl font-black">Recibo do Cliente</h3>
+                <p className="text-[10px] uppercase font-bold opacity-60 tracking-widest">Atelier Edite Borges</p>
               </div>
               <button onClick={() => setPrintOrderId(null)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors">
                 <i className="fa-solid fa-xmark"></i>
               </button>
             </div>
             
-            <div className="animate-in fade-in zoom-in duration-300 w-full">
+            <div className="animate-in fade-in zoom-in duration-300 w-full mb-8">
               {renderReceiptPreview(printOrderId)}
             </div>
 
-            <div className="grid grid-cols-1 w-full gap-3 mt-8">
+            <div className="grid grid-cols-1 w-full gap-3 mt-4 mb-10">
               <button 
                 onClick={triggerPrint}
                 className="w-full py-5 bg-violet-600 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-violet-900/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-3"
@@ -598,7 +589,13 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         
         .receipt-paper {
           position: relative;
-          filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));
+          filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5));
+          z-index: 10;
+          color: black !important;
+        }
+
+        .receipt-paper * {
+          color: black !important;
         }
         
         /* Efeito de papel serrilhado na base */
@@ -615,7 +612,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         }
 
         @media print {
-          /* Esconde tudo exceto o conteúdo do recibo */
           body * { visibility: hidden !important; background: transparent !important; }
           #receipt-printable-content, #receipt-printable-content * { 
             visibility: visible !important; 
@@ -623,7 +619,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
             opacity: 1 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            font-weight: 900 !important;
           }
           #receipt-printable-content {
             position: absolute !important;
@@ -632,12 +627,11 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
             width: 100% !important;
             max-width: none !important;
             margin: 0 !important;
-            padding: 20px !important;
+            padding: 40px !important;
             box-shadow: none !important;
             border: none !important;
             background: #fff !important;
           }
-          /* Remove decorações de preview na impressão real */
           .receipt-paper::after { display: none; }
           @page { margin: 0; size: auto; }
         }
