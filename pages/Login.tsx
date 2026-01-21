@@ -14,7 +14,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [logoSrc, setLogoSrc] = useState('./logo.png');
+  // Caminho absoluto com cache-busting para garantir leitura
+  const [logoSrc, setLogoSrc] = useState(`/logo.png?t=${new Date().getTime()}`);
   const [hasError, setHasError] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,10 +53,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   const handleLogoError = () => {
-    if (logoSrc === './logo.png') {
-      setLogoSrc('./logo.jpg');
-    } else if (logoSrc === './logo.jpg') {
-      setLogoSrc('./logo.jpeg');
+    if (logoSrc.includes('logo.png')) {
+      setLogoSrc(`/logo.jpg?t=${new Date().getTime()}`);
     } else {
       setHasError(true);
     }
@@ -63,36 +62,35 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-[#fffafb] dark:bg-slate-950 transition-colors relative">
+      {/* HEADER SUPERIOR: Logo à esquerda, Toggle à direita */}
+      <div className="absolute top-6 left-6 flex items-center">
+        <div className="w-12 h-12 bg-white rounded-xl shadow-lg border border-rose-50 overflow-hidden flex items-center justify-center p-0.5">
+          {!hasError ? (
+            <img 
+              src={logoSrc} 
+              alt="Atelier Logo" 
+              className="w-full h-full object-contain"
+              onError={handleLogoError}
+            />
+          ) : (
+            <i className="fa-solid fa-scissors text-rose-500 text-xl"></i>
+          )}
+        </div>
+      </div>
+
       <div className="absolute top-6 right-6">
         <ThemeToggle />
       </div>
       
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-6">
-          <div className="w-40 h-40 bg-white rounded-full flex items-center justify-center shadow-xl shadow-rose-100 dark:shadow-none p-2 border-2 border-rose-50 overflow-hidden relative">
-            {!hasError ? (
-              <img 
-                key={logoSrc}
-                src={logoSrc} 
-                alt="Atelier Edite Borges" 
-                className="w-full h-full object-contain animate-fade-in"
-                onError={handleLogoError}
-              />
-            ) : (
-              <div className="flex flex-col items-center text-rose-300">
-                <i className="fa-solid fa-scissors text-5xl"></i>
-                <span className="text-[8px] font-bold uppercase mt-2">Atelier Edite</span>
-              </div>
-            )}
-          </div>
+      <div className="w-full max-w-md mt-12">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white leading-tight">Atelier Edite Borges</h1>
+          <p className="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-[0.2em] mt-1">Gestão de Oficina e Finanças</p>
         </div>
-        
-        <h1 className="text-2xl font-black text-gray-900 dark:text-white text-center mb-1">Atelier Edite Borges</h1>
-        <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 text-center mb-8 uppercase tracking-widest">Gestão de Oficina e Finanças</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 ml-1">E-mail</label>
+          <div className="text-left">
+            <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">E-mail de Acesso</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
                 <i className="fa-solid fa-envelope text-sm"></i>
@@ -100,7 +98,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <input
                 type="email"
                 required
-                className="w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white rounded-2xl focus:ring-2 focus:ring-rose-500 outline-none transition-all text-sm"
+                className="w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white rounded-2xl focus:ring-2 focus:ring-rose-500 outline-none transition-all shadow-sm"
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -108,8 +106,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 ml-1">Senha</label>
+          <div className="text-left">
+            <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">Senha</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
                 <i className="fa-solid fa-lock text-sm"></i>
@@ -117,7 +115,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <input
                 type="password"
                 required
-                className="w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white rounded-2xl focus:ring-2 focus:ring-rose-500 outline-none transition-all text-sm"
+                className="w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white rounded-2xl focus:ring-2 focus:ring-rose-500 outline-none transition-all shadow-sm"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -134,23 +132,19 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-rose-700 active:scale-95 transition-all shadow-lg shadow-rose-100 dark:shadow-none mt-2 disabled:opacity-50"
+            className="w-full py-5 bg-rose-600 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-rose-700 active:scale-95 transition-all shadow-xl shadow-rose-100 dark:shadow-none mt-4 disabled:opacity-50 text-xs"
           >
-            {loading ? 'Acessando...' : 'Entrar no Sistema'}
+            {loading ? 'Validando...' : 'Entrar no Sistema'}
           </button>
         </form>
 
-        <p className="mt-8 text-center text-gray-500 dark:text-gray-400 text-xs font-medium">
+        <p className="mt-10 text-center text-gray-400 dark:text-gray-500 text-[10px] font-bold uppercase tracking-wider">
           Ainda não tem acesso?{' '}
-          <Link to="/register" className="text-rose-600 dark:text-rose-400 font-black hover:underline">
+          <Link to="/register" className="text-rose-600 dark:text-rose-400 font-black hover:underline ml-1">
             Solicitar Cadastro
           </Link>
         </p>
       </div>
-      <style>{`
-        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fade-in { animation: fade-in 0.5s ease-out; }
-      `}</style>
     </div>
   );
 };

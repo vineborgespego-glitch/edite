@@ -13,7 +13,8 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) => {
   const [isMounted, setIsMounted] = useState(false);
-  const [logoSrc, setLogoSrc] = useState('logo.png');
+  // Caminho absoluto com cache-busting
+  const [logoSrc, setLogoSrc] = useState(`/logo.png?t=${new Date().getTime()}`);
   const isDarkMode = document.documentElement.classList.contains('dark');
 
   useEffect(() => {
@@ -22,9 +23,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
   }, []);
 
   const handleLogoError = () => {
-    if (logoSrc === 'logo.png') setLogoSrc('logo.jpg');
-    else if (logoSrc === 'logo.jpg') setLogoSrc('logo.jpeg');
-    else setLogoSrc('https://via.placeholder.com/150?text=Atelier+Logo');
+    if (logoSrc.includes('logo.png')) {
+      setLogoSrc(`/logo.jpg?t=${new Date().getTime()}`);
+    } else {
+      setLogoSrc('https://via.placeholder.com/150?text=Atelier+Logo');
+    }
   };
 
   const safeTransactions = transactions || [];
@@ -90,13 +93,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
   }, [stats]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#fffafb] dark:bg-slate-950 transition-colors duration-300 pb-24 md:pb-6">
+    <div className="flex flex-col min-h-screen bg-[#fffafb] dark:bg-slate-950 transition-colors duration-300 pb-24 md:pb-6 text-left">
       <header className="bg-white dark:bg-slate-900 px-6 pt-12 pb-6 flex items-center justify-between sticky top-0 z-40 border-b border-gray-100 dark:border-slate-800 transition-colors">
         <div className="flex items-center space-x-3">
           <Link to="/" className="w-10 h-10 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 rounded-xl flex items-center justify-center active:scale-90 transition-all border border-gray-100 dark:border-slate-700">
             <i className="fa-solid fa-chevron-left"></i>
           </Link>
-          <div className="w-10 h-10 bg-white dark:bg-white rounded-full flex items-center justify-center shadow-sm p-1 border border-rose-50 overflow-hidden">
+          <div className="w-10 h-10 bg-white dark:bg-white rounded-xl flex items-center justify-center shadow-md p-0.5 border border-rose-50 overflow-hidden">
             <img 
               src={logoSrc} 
               alt="Logo" 
