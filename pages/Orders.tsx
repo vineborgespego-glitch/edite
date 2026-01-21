@@ -165,58 +165,58 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     const clientPhone = getClientPhone(order.id_cliente);
 
     return (
-      <div id="receipt-printable-content" className="receipt-paper bg-white text-slate-900 p-6 shadow-inner mx-auto max-w-[320px] font-mono border-t-4 border-violet-600">
-        <div className="text-center mb-6 border-b-2 border-dashed border-slate-300 pb-4">
-          <h2 className="text-xl font-black mb-0 tracking-tighter">IA FINANCE CRM</h2>
-          <p className="text-[9px] font-bold uppercase opacity-60">Serviços de Costura e Ajustes</p>
+      <div id="receipt-printable-content" className="receipt-paper bg-white text-black p-6 shadow-inner mx-auto max-w-[320px] font-mono border-t-4 border-black">
+        <div className="text-center mb-6 border-b-2 border-dashed border-black pb-4">
+          <h2 className="text-xl font-black mb-0 tracking-tighter text-black">IA FINANCE CRM</h2>
+          <p className="text-[10px] font-black uppercase text-black">Serviços de Costura e Ajustes</p>
         </div>
         
-        <div className="text-[10px] space-y-1 mb-4">
+        <div className="text-[11px] space-y-1 mb-4 text-black font-bold">
           <div className="flex justify-between">
-            <span className="font-bold">PEDIDO:</span>
+            <span className="font-black">PEDIDO:</span>
             <span>#{order.id_pedido}</span>
           </div>
           <div className="flex justify-between">
-            <span className="font-bold">DATA:</span>
+            <span className="font-black">DATA:</span>
             <span>{new Date(order.created_at).toLocaleDateString('pt-BR')}</span>
           </div>
           <div className="flex justify-between">
-            <span className="font-bold">CLIENTE:</span>
+            <span className="font-black">CLIENTE:</span>
             <span className="truncate max-w-[150px]">{clientName}</span>
           </div>
           {clientPhone && (
             <div className="flex justify-between">
-              <span className="font-bold">TEL:</span>
+              <span className="font-black">TEL:</span>
               <span>{clientPhone}</span>
             </div>
           )}
         </div>
 
-        <div className="border-t border-b border-dashed border-slate-300 py-3 mb-4">
-          <p className="text-[9px] font-black uppercase mb-2">Itens do Pedido:</p>
+        <div className="border-t border-b border-dashed border-black py-3 mb-4">
+          <p className="text-[10px] font-black uppercase mb-2 text-black underline">Itens do Pedido:</p>
           {itemsInOrder.map((item, idx) => (
-            <div key={idx} className="flex justify-between text-[10px] mb-1">
+            <div key={idx} className="flex justify-between text-[11px] mb-1 text-black font-bold">
               <span className="flex-1 pr-2">{item.quantidade}x {item.descreçao}</span>
-              <span className="font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(item.total))}</span>
+              <span className="font-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(item.total))}</span>
             </div>
           ))}
         </div>
 
-        <div className="flex justify-between items-center mb-6">
-          <span className="text-[10px] font-black">TOTAL A PAGAR:</span>
-          <span className="text-lg font-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
+        <div className="flex justify-between items-center mb-6 text-black">
+          <span className="text-[11px] font-black">TOTAL A PAGAR:</span>
+          <span className="text-xl font-black underline">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
         </div>
 
-        <div className={`text-center py-2 px-4 border-2 rounded-lg mb-6 ${order.pago ? 'border-green-600 bg-green-50 text-green-700' : 'border-red-500 bg-red-50 text-red-600'}`}>
-          <span className="text-sm font-black tracking-widest uppercase">{order.pago ? 'PAGO' : 'PENDENTE'}</span>
+        <div className={`text-center py-2 px-4 border-2 border-black rounded-lg mb-6 bg-white`}>
+          <span className="text-sm font-black tracking-widest uppercase text-black">{order.pago ? '*** PAGO ***' : '--- PENDENTE ---'}</span>
         </div>
 
-        <div className="text-center border-t border-dashed border-slate-300 pt-4">
-          <p className="text-[9px] font-bold uppercase mb-1">Previsão de Entrega:</p>
-          <p className="text-base font-black">{order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR'}</p>
+        <div className="text-center border-t border-dashed border-black pt-4 text-black">
+          <p className="text-[10px] font-black uppercase mb-1">Previsão de Entrega:</p>
+          <p className="text-lg font-black">{order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR'}</p>
         </div>
         
-        <div className="mt-8 text-center text-[8px] italic opacity-50">
+        <div className="mt-8 text-center text-[9px] font-bold text-black">
           <p>Obrigado pela confiança!</p>
           <p>iafinance.cloud</p>
         </div>
@@ -590,24 +590,29 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
 
         @media print {
           /* Esconde tudo exceto o conteúdo do recibo */
-          body * { visibility: hidden !important; }
+          body * { visibility: hidden !important; background: transparent !important; }
           #receipt-printable-content, #receipt-printable-content * { 
             visibility: visible !important; 
+            color: #000 !important;
+            opacity: 1 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           #receipt-printable-content {
-            position: fixed !important;
+            position: absolute !important;
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
             max-width: none !important;
             margin: 0 !important;
-            padding: 40px !important;
+            padding: 20px !important;
             box-shadow: none !important;
             border: none !important;
+            background: #fff !important;
           }
           /* Remove decorações de preview na impressão real */
           .receipt-paper::after { display: none; }
-          @page { margin: 0; }
+          @page { margin: 0; size: auto; }
         }
       `}</style>
     </div>
