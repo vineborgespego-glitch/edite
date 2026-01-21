@@ -14,10 +14,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  // Tenta as extensões mais comuns em sequência
-  const [logoSrc, setLogoSrc] = useState('logo.jpeg');
-  const [hasError, setHasError] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +28,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           'Authorization': `Bearer ${SUPABASE_KEY}`
         }
       });
-
-      if (!response.ok) throw new Error(`Erro na API: ${response.status}`);
       const users = await response.json();
 
       if (Array.isArray(users) && users.length > 0) {
@@ -47,106 +41,73 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         setError('E-mail não encontrado.');
       }
     } catch (err: any) {
-      setError(`Erro de conexão: ${err.message}`);
+      setError(`Erro de conexão.`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogoError = () => {
-    if (logoSrc === 'logo.jpeg') {
-      setLogoSrc('logo.png');
-    } else if (logoSrc === 'logo.png') {
-      setLogoSrc('logo.jpg');
-    } else {
-      setHasError(true);
-    }
-  };
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-[#fffafb] dark:bg-slate-950 transition-colors relative">
-      {/* LOGO NO CANTO SUPERIOR ESQUERDO */}
-      <div className="absolute top-6 left-6 flex items-center">
-        <div className="w-14 h-14 bg-white rounded-2xl shadow-xl border border-rose-50 overflow-hidden flex items-center justify-center p-0.5">
-          {!hasError ? (
-            <img 
-              src={logoSrc} 
-              alt="Logo" 
-              className="w-full h-full object-contain"
-              onError={handleLogoError}
-            />
-          ) : (
-            <i className="fa-solid fa-scissors text-rose-500 text-2xl"></i>
-          )}
+      {/* HEADER DE MARCA - LADO ESQUERDO */}
+      <div className="absolute top-6 left-6 flex items-center space-x-3">
+        <div className="w-12 h-12 bg-white rounded-xl shadow-lg border border-rose-100 overflow-hidden p-0.5">
+          <img src="logo.jpeg" alt="Logo" className="w-full h-full object-contain" />
+        </div>
+        <div className="hidden sm:block">
+          <p className="text-[10px] font-black text-rose-600 uppercase tracking-tighter leading-none">Atelier</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Edite Borges</p>
         </div>
       </div>
 
-      {/* MODO ESCURO NO CANTO SUPERIOR DIREITO */}
       <div className="absolute top-6 right-6">
         <ThemeToggle />
       </div>
       
-      <div className="w-full max-w-md mt-16 text-center">
+      <div className="w-full max-w-md text-center">
         <div className="mb-10">
-          <h1 className="text-3xl font-black text-gray-900 dark:text-white leading-tight">Atelier Edite Borges</h1>
-          <p className="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-[0.2em] mt-1">Gestão de Oficina e Finanças</p>
+          <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">Bem-vindo</h1>
+          <p className="text-[11px] font-bold text-rose-500 uppercase tracking-[0.3em] mt-2">Gestão de Atelier de Costura</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="text-left">
-            <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">E-mail de Acesso</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
-                <i className="fa-solid fa-envelope text-sm"></i>
-              </span>
-              <input
-                type="email"
-                required
-                className="w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white rounded-2xl focus:ring-2 focus:ring-rose-500 outline-none transition-all shadow-sm"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">E-mail</label>
+            <input
+              type="email"
+              required
+              className="w-full px-5 py-4 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white rounded-2xl focus:ring-2 focus:ring-rose-500 outline-none transition-all shadow-sm"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
 
           <div className="text-left">
-            <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">Senha</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
-                <i className="fa-solid fa-lock text-sm"></i>
-              </span>
-              <input
-                type="password"
-                required
-                className="w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white rounded-2xl focus:ring-2 focus:ring-rose-500 outline-none transition-all shadow-sm"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Senha</label>
+            <input
+              type="password"
+              required
+              className="w-full px-5 py-4 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white rounded-2xl focus:ring-2 focus:ring-rose-500 outline-none transition-all shadow-sm"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
 
-          {error && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-xl">
-              <p className="text-red-600 dark:text-red-400 text-[10px] text-center font-black uppercase">{error}</p>
-            </div>
-          )}
+          {error && <p className="text-red-500 text-[10px] font-black uppercase tracking-wider">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-5 bg-rose-600 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-rose-700 active:scale-95 transition-all shadow-xl shadow-rose-100 dark:shadow-none mt-4 disabled:opacity-50 text-xs"
+            className="w-full py-5 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-rose-700 active:scale-95 transition-all shadow-xl shadow-rose-100 dark:shadow-none mt-4 text-xs"
           >
-            {loading ? 'Validando...' : 'Entrar no Sistema'}
+            {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
 
-        <p className="mt-10 text-center text-gray-400 dark:text-gray-500 text-[10px] font-bold uppercase tracking-wider">
-          Ainda não tem acesso?{' '}
-          <Link to="/register" className="text-rose-600 dark:text-rose-400 font-black hover:underline ml-1">
-            Solicitar Cadastro
-          </Link>
+        <p className="mt-10 text-gray-400 dark:text-gray-500 text-[10px] font-bold uppercase tracking-widest">
+          Novo aqui? <Link to="/register" className="text-rose-600 font-black hover:underline ml-1">Criar Conta</Link>
         </p>
       </div>
     </div>
