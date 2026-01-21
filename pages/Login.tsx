@@ -14,6 +14,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [logoSrc, setLogoSrc] = useState('logo.png');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,21 +50,33 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }
   };
 
+  // Tenta extensões diferentes se a principal falhar
+  const handleLogoError = () => {
+    if (logoSrc === 'logo.png') setLogoSrc('logo.jpg');
+    else if (logoSrc === 'logo.jpg') setLogoSrc('logo.jpeg');
+    else setLogoSrc('https://via.placeholder.com/150?text=Atelier+Logo');
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-white dark:bg-slate-950 transition-colors relative">
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-[#fffafb] dark:bg-slate-950 transition-colors relative">
       <div className="absolute top-6 right-6">
         <ThemeToggle />
       </div>
       
       <div className="w-full max-w-md">
-        <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20">
-            <i className="fa-solid fa-wallet text-white text-3xl"></i>
+        <div className="flex justify-center mb-6">
+          <div className="w-40 h-40 bg-white dark:bg-white rounded-full flex items-center justify-center shadow-xl shadow-rose-100 dark:shadow-none p-2 border-2 border-rose-50 overflow-hidden">
+            <img 
+              src={logoSrc} 
+              alt="Atelier Edite Borges" 
+              className="w-full h-full object-contain"
+              onError={handleLogoError}
+            />
           </div>
         </div>
         
         <h1 className="text-2xl font-black text-gray-900 dark:text-white text-center mb-1">Atelier Edite Borges</h1>
-        <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 text-center mb-8 uppercase tracking-widest tracking-widest">Gestão de Oficina e Finanças</p>
+        <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 text-center mb-8 uppercase tracking-widest">Gestão de Oficina e Finanças</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -75,7 +88,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <input
                 type="email"
                 required
-                className="w-full pl-11 pr-4 py-4 bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
+                className="w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white rounded-2xl focus:ring-2 focus:ring-rose-500 outline-none transition-all text-sm"
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -92,7 +105,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <input
                 type="password"
                 required
-                className="w-full pl-11 pr-4 py-4 bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
+                className="w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white rounded-2xl focus:ring-2 focus:ring-rose-500 outline-none transition-all text-sm"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -109,15 +122,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-indigo-600 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-100 dark:shadow-none mt-2 disabled:opacity-50"
+            className="w-full py-4 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-rose-700 active:scale-95 transition-all shadow-lg shadow-rose-100 dark:shadow-none mt-2 disabled:opacity-50"
           >
-            {loading ? 'Sincronizando...' : 'Entrar no Sistema'}
+            {loading ? 'Acessando...' : 'Entrar no Sistema'}
           </button>
         </form>
 
         <p className="mt-8 text-center text-gray-500 dark:text-gray-400 text-xs font-medium">
           Ainda não tem acesso?{' '}
-          <Link to="/register" className="text-indigo-600 dark:text-indigo-400 font-black hover:underline">
+          <Link to="/register" className="text-rose-600 dark:text-rose-400 font-black hover:underline">
             Solicitar Cadastro
           </Link>
         </p>

@@ -12,6 +12,18 @@
         theme: {
           extend: {
             colors: {
+              primary: {
+                50: '#fff1f2',
+                100: '#ffe4e6',
+                200: '#fecdd3',
+                300: '#fda4af',
+                400: '#fb7185',
+                500: '#f43f5e',
+                600: '#e11d48',
+                700: '#be123c',
+                800: '#9f1239',
+                900: '#881337',
+              },
               dark: {
                 bg: '#0f172a',
                 card: '#1e293b',
@@ -25,14 +37,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="logo.png">
-    <meta name="theme-color" content="#4f46e5">
+    <meta name="theme-color" content="#e11d48">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { 
           font-family: 'Inter', sans-serif; 
           transition: background-color 0.3s ease, color 0.3s ease;
           margin: 0;
-          background-color: #f9fafb;
+          background-color: #fffafb;
         }
         .dark body { background-color: #0f172a; color: #f8fafc; }
         .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
@@ -40,6 +52,9 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         html, body { height: 100%; }
+        
+        /* Estilização suave para imagens de logo */
+        .logo-shadow { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
     </style>
 <script type="importmap">
 {
@@ -55,7 +70,7 @@
 }
 </script>
 </head>
-<body class="bg-gray-50 text-gray-900 transition-colors duration-300">
+<body class="bg-[#fffafb] text-gray-900 transition-colors duration-300">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
     <script>
