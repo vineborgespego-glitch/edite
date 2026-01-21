@@ -1,22 +1,24 @@
 
 {
   "name": "IAFinanceCRM",
-  "short_name": "IAFinance",
-  "description": "CRM Financeiro Inteligente",
+  "short_name": "Atelier Edite",
+  "description": "CRM Financeiro - Atelier de Costura Edite Borges",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4f46e5",
   "icons": [
     {
-      "src": "https://picsum.photos/192/192",
+      "src": "logo.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "https://picsum.photos/512/512",
+      "src": "logo.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
