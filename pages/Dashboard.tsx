@@ -13,12 +13,19 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) => {
   const [isMounted, setIsMounted] = useState(false);
+  const [logoSrc, setLogoSrc] = useState('logo.png');
   const isDarkMode = document.documentElement.classList.contains('dark');
 
   useEffect(() => {
     const timer = setTimeout(() => setIsMounted(true), 150);
     return () => clearTimeout(timer);
   }, []);
+
+  const handleLogoError = () => {
+    if (logoSrc === 'logo.png') setLogoSrc('logo.jpg');
+    else if (logoSrc === 'logo.jpg') setLogoSrc('logo.jpeg');
+    else setLogoSrc('https://via.placeholder.com/150?text=Atelier+Logo');
+  };
 
   const safeTransactions = transactions || [];
 
@@ -63,20 +70,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
     return weeks;
   }, [userTransactions]);
 
-  const categoryData = useMemo(() => {
-    const expenses = userTransactions.filter(t => t.tipo === 'despesa');
-    const categories: Record<string, number> = {};
-    expenses.forEach(t => {
-      categories[t.categoria] = (categories[t.categoria] || 0) + Number(t.valor);
-    });
-    return Object.keys(categories).map(cat => ({
-      name: cat,
-      value: categories[cat]
-    }));
-  }, [userTransactions]);
-
-  const COLORS = ['#f43f5e', '#10b981', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899'];
-
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
   };
@@ -104,7 +97,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
             <i className="fa-solid fa-chevron-left"></i>
           </Link>
           <div className="w-10 h-10 bg-white dark:bg-white rounded-full flex items-center justify-center shadow-sm p-1 border border-rose-50 overflow-hidden">
-            <img src="logo.png" alt="Logo" className="w-full h-full object-contain" />
+            <img 
+              src={logoSrc} 
+              alt="Logo" 
+              className="w-full h-full object-contain" 
+              onError={handleLogoError}
+            />
           </div>
           <div>
             <h2 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{user.nome ? user.nome.split(' ')[0] : 'Usuário'}</h2>
@@ -120,7 +118,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
       </header>
 
       <main className="px-6 py-6 space-y-6 max-w-7xl mx-auto w-full">
-        {/* Card Principal de Saldo */}
         <div className="bg-rose-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-rose-100 dark:shadow-none relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
           <div className="relative z-10">
@@ -145,7 +142,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
           </div>
         </div>
 
-        {/* Insight da IA */}
         <div className={`p-6 rounded-3xl border shadow-sm flex items-start space-x-4 transition-colors ${stats.despesas > stats.receitas * 0.5 ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/30' : 'bg-rose-50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/30'}`}>
           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${stats.despesas > stats.receitas * 0.5 ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'}`}>
             <i className={`fa-solid ${stats.despesas > stats.receitas * 0.5 ? 'fa-triangle-exclamation animate-pulse' : 'fa-wand-magic-sparkles'} text-xl`}></i>
@@ -156,7 +152,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
           </div>
         </div>
 
-        {/* Botões de Ação Rápida */}
         <div className={`grid gap-4 ${user.role ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
           <Link to="/receitas" className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-gray-100 dark:border-slate-800 flex flex-col items-center justify-center space-y-2 hover:bg-gray-50 active:scale-95 transition-all shadow-sm group">
             <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-2xl flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">

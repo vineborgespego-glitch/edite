@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 const InstallPWA: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [logoSrc, setLogoSrc] = useState('logo.png');
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -15,6 +16,12 @@ const InstallPWA: React.FC = () => {
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
+
+  const handleLogoError = () => {
+    if (logoSrc === 'logo.png') setLogoSrc('logo.jpg');
+    else if (logoSrc === 'logo.jpg') setLogoSrc('logo.jpeg');
+    else setLogoSrc('https://via.placeholder.com/150?text=Atelier+Logo');
+  };
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -35,7 +42,12 @@ const InstallPWA: React.FC = () => {
     <div className="fixed bottom-24 left-4 right-4 z-[100] animate-bounce-in">
       <div className="bg-white dark:bg-slate-900 border border-rose-100 dark:border-slate-800 rounded-3xl shadow-2xl p-5 flex flex-col items-center text-center space-y-4 max-w-sm mx-auto">
         <div className="w-16 h-16 bg-white rounded-2xl shadow-sm p-1 overflow-hidden border border-rose-50">
-          <img src="logo.png" alt="Logo" className="w-full h-full object-contain" />
+          <img 
+            src={logoSrc} 
+            alt="Logo" 
+            className="w-full h-full object-contain" 
+            onError={handleLogoError}
+          />
         </div>
         
         <div>
