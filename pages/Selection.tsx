@@ -10,19 +10,20 @@ interface SelectionProps {
 }
 
 const Selection: React.FC<SelectionProps> = ({ user, onLogout }) => {
-  const [logoSrc, setLogoSrc] = useState('logo.png');
+  const [logoSrc, setLogoSrc] = useState('logo.jpeg');
   const [hasError, setHasError] = useState(false);
 
   const handleLogoError = () => {
-    if (logoSrc === 'logo.png') setLogoSrc('logo.jpg');
+    if (logoSrc === 'logo.jpeg') setLogoSrc('logo.png');
+    else if (logoSrc === 'logo.png') setLogoSrc('logo.jpg');
     else setHasError(true);
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-[#fffafb] dark:bg-slate-950 transition-colors relative">
-      {/* BRANDING NO CANTO */}
+      {/* LOGO NO CANTO SUPERIOR ESQUERDO */}
       <div className="absolute top-6 left-6 flex items-center">
-        <div className="w-12 h-12 bg-white rounded-xl shadow-lg border border-rose-50 overflow-hidden flex items-center justify-center p-0.5">
+        <div className="w-14 h-14 bg-white rounded-2xl shadow-xl border border-rose-50 overflow-hidden flex items-center justify-center p-0.5">
           {!hasError ? (
             <img 
               src={logoSrc} 
@@ -31,16 +32,17 @@ const Selection: React.FC<SelectionProps> = ({ user, onLogout }) => {
               onError={handleLogoError}
             />
           ) : (
-            <i className="fa-solid fa-scissors text-rose-500 text-xl"></i>
+            <i className="fa-solid fa-scissors text-rose-500 text-2xl"></i>
           )}
         </div>
       </div>
 
+      {/* MODO ESCURO NO CANTO SUPERIOR DIREITO */}
       <div className="absolute top-6 right-6">
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-4xl mt-12">
+      <div className="w-full max-w-4xl mt-16">
         <header className="flex flex-col items-center mb-12 text-center">
           <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">Painel de Controle</h1>
           <p className="text-gray-500 dark:text-gray-400 font-medium italic">

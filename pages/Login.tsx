@@ -14,8 +14,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  // Caminho relativo simples é mais resiliente em ambientes web
-  const [logoSrc, setLogoSrc] = useState('logo.png');
+  
+  // Tenta as extensões mais comuns em sequência
+  const [logoSrc, setLogoSrc] = useState('logo.jpeg');
   const [hasError, setHasError] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +54,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   const handleLogoError = () => {
-    if (logoSrc === 'logo.png') {
+    if (logoSrc === 'logo.jpeg') {
+      setLogoSrc('logo.png');
+    } else if (logoSrc === 'logo.png') {
       setLogoSrc('logo.jpg');
     } else {
       setHasError(true);
@@ -62,9 +65,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-[#fffafb] dark:bg-slate-950 transition-colors relative">
-      {/* BRANDING NO CANTO OPOSTO AO TOGGLE */}
+      {/* LOGO NO CANTO SUPERIOR ESQUERDO */}
       <div className="absolute top-6 left-6 flex items-center">
-        <div className="w-12 h-12 bg-white rounded-xl shadow-lg border border-rose-50 overflow-hidden flex items-center justify-center p-0.5">
+        <div className="w-14 h-14 bg-white rounded-2xl shadow-xl border border-rose-50 overflow-hidden flex items-center justify-center p-0.5">
           {!hasError ? (
             <img 
               src={logoSrc} 
@@ -73,17 +76,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               onError={handleLogoError}
             />
           ) : (
-            <i className="fa-solid fa-scissors text-rose-500 text-xl"></i>
+            <i className="fa-solid fa-scissors text-rose-500 text-2xl"></i>
           )}
         </div>
       </div>
 
+      {/* MODO ESCURO NO CANTO SUPERIOR DIREITO */}
       <div className="absolute top-6 right-6">
         <ThemeToggle />
       </div>
       
-      <div className="w-full max-w-md mt-12 text-center">
-        <div className="mb-8">
+      <div className="w-full max-w-md mt-16 text-center">
+        <div className="mb-10">
           <h1 className="text-3xl font-black text-gray-900 dark:text-white leading-tight">Atelier Edite Borges</h1>
           <p className="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-[0.2em] mt-1">Gestão de Oficina e Finanças</p>
         </div>

@@ -13,7 +13,7 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) => {
   const [isMounted, setIsMounted] = useState(false);
-  const [logoSrc, setLogoSrc] = useState('logo.png');
+  const [logoSrc, setLogoSrc] = useState('logo.jpeg');
   const [hasError, setHasError] = useState(false);
   const isDarkMode = document.documentElement.classList.contains('dark');
 
@@ -23,7 +23,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
   }, []);
 
   const handleLogoError = () => {
-    if (logoSrc === 'logo.png') setLogoSrc('logo.jpg');
+    if (logoSrc === 'logo.jpeg') setLogoSrc('logo.png');
+    else if (logoSrc === 'logo.png') setLogoSrc('logo.jpg');
     else setHasError(true);
   };
 
