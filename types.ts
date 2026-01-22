@@ -28,11 +28,12 @@ export interface Order {
 
 export interface OrderItem {
   id_item: number;
-  descreçao: string;
+  descreçao: string; // Conforme seu SQL
   quantidade: string;
   valor_unidade: string;
   total: string;
-  id_pedido: string;
+  id_pedido: string | number;
+  obicervação?: string; // Conforme seu SQL
 }
 
 export interface Client {

@@ -33,12 +33,8 @@ const App: React.FC = () => {
     if (user) {
       const userTheme = localStorage.getItem(`ia_finance_theme_user_${user.id}`);
       if (userTheme) {
-        if (userTheme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-        localStorage.setItem('ia_finance_theme', userTheme);
+        if (userTheme === 'dark') document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
       }
     }
   }, [user]);
@@ -70,9 +66,19 @@ const App: React.FC = () => {
       setTransactions(combinedTransactions);
       if (Array.isArray(dataO)) setOrders(dataO);
       if (Array.isArray(dataC)) setClients(dataC);
-      if (Array.isArray(dataI)) setOrderItems(dataI);
+      
+      if (Array.isArray(dataI)) {
+        // NORMALIZAÇÃO CRÍTICA: Mapeia as colunas do banco para os nomes internos do objeto
+        const normalizedItems = dataI.map((item: any) => ({
+          ...item,
+          id_pedido: item.id_pedido || item.pedido_id,
+          descreçao: item.descreçao || item.descriçao || item.descricao || "Sem descrição",
+          obicervação: item.obicervação || item.observacao || item.obs || ""
+        }));
+        setOrderItems(normalizedItems);
+      }
 
-      if (user.role === true) {
+      if (user.role) {
         const resU = await fetch(`${SUPABASE_URL}/users?select=*`, { headers });
         const usersData = await resU.json();
         if (Array.isArray(usersData)) setAllUsers(usersData);
@@ -98,17 +104,6 @@ const App: React.FC = () => {
     localStorage.removeItem('ia_finance_user');
   };
 
-  const deleteTransaction = async (id: number, tipo: 'receita' | 'despesa') => {
-    try {
-      const table = tipo === 'receita' ? 'receitas' : 'despesas';
-      await fetch(`${SUPABASE_URL}/${table}?id=eq.${id}`, {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-      });
-      fetchData();
-    } catch (e) { console.error(e); }
-  };
-
   const addTransaction = async (t: Omit<Transaction, 'id'>) => {
     try {
       const table = t.tipo === 'receita' ? 'receitas' : 'despesas';
@@ -122,40 +117,88 @@ const App: React.FC = () => {
     } catch (e) { console.error(e); }
   };
 
+  const updateOrder = async (id: number, updates: Partial<Order>) => {
+    try {
+      const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' };
+      
+      if (updates.pago === true && user) {
+        const orderIdentifier = `Pagamento Pedido #${id}`;
+        const alreadyPaid = transactions.some(t => t.tipo === 'receita' && t.descricao.includes(orderIdentifier));
+
+        if (!alreadyPaid) {
+          const itemsOfOrder = orderItems.filter(i => Number(i.id_pedido) === Number(id));
+          const totalOrder = itemsOfOrder.reduce((acc, i) => acc + (parseFloat(i.total) || 0), 0);
+          
+          if (totalOrder > 0) {
+            await addTransaction({
+              user_id: user.id,
+              descricao: orderIdentifier,
+              valor: totalOrder,
+              categoria: 'Serviços',
+              data: new Date().toISOString(),
+              tipo: 'receita'
+            });
+          }
+        }
+      }
+
+      await fetch(`${SUPABASE_URL}/pedidos?id_pedido=eq.${id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(updates)
+      });
+      fetchData();
+    } catch (e) { console.error(e); }
+  };
+
   const addOrderWithItems = async (orderData: Omit<Order, 'id_pedido' | 'created_at'>, items: Omit<OrderItem, 'id_item' | 'id_pedido'>[]) => {
     try {
+      const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
       const resOrder = await fetch(`${SUPABASE_URL}/pedidos`, {
         method: 'POST',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        headers,
         body: JSON.stringify(orderData)
       });
+      
       const createdOrderData = await resOrder.json();
       const createdOrder = Array.isArray(createdOrderData) ? createdOrderData[0] : createdOrderData;
+      
+      if (!createdOrder || !createdOrder.id_pedido) {
+         console.error("Falha ao criar pedido.");
+         return;
+      }
+
       const newOrderId = createdOrder.id_pedido;
 
-      if (newOrderId && items.length > 0) {
-        const itemsToSave = items.map(item => ({ ...item, id_pedido: String(newOrderId) }));
+      if (items.length > 0) {
+        // SALVAMENTO: Usa exatamente descreçao e obicervação conforme seu SQL
+        const itemsToSave = items.map(item => ({ 
+          descreçao: item.descreçao,
+          quantidade: item.quantidade,
+          valor_unidade: item.valor_unidade,
+          total: item.total,
+          obicervação: item.obicervação || "",
+          id_pedido: String(newOrderId) 
+        }));
+
         await fetch(`${SUPABASE_URL}/Itens_Pedido`, {
           method: 'POST',
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(itemsToSave)
         });
+        
         if (orderData.pago && user) {
           const totalOrder = items.reduce((acc, i) => acc + (parseFloat(i.total) || 0), 0);
-          await addTransaction({ user_id: user.id, descricao: `Pagamento Pedido #${newOrderId}`, valor: totalOrder, categoria: 'Serviços', data: new Date().toISOString(), tipo: 'receita' });
+          await addTransaction({ 
+            user_id: user.id, 
+            descricao: `Pagamento Pedido #${newOrderId}`, 
+            valor: totalOrder, 
+            categoria: 'Serviços', 
+            data: new Date().toISOString(), 
+            tipo: 'receita' 
+          });
         }
       }
-      fetchData();
-    } catch (e) { console.error(e); }
-  };
-
-  const updateOrder = async (id: number, updates: Partial<Order>) => {
-    try {
-      await fetch(`${SUPABASE_URL}/pedidos?id_pedido=eq.${id}`, {
-        method: 'PATCH',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
-      });
       fetchData();
     } catch (e) { console.error(e); }
   };
@@ -181,16 +224,14 @@ const App: React.FC = () => {
             <div className="w-12 h-12 border-4 border-rose-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
-        
         <InstallPWA />
-
         <Routes>
           <Route path="/login" element={!user ? <Login onLogin={handleLogin} /> : <Navigate to="/" />} />
           <Route path="/register" element={!user ? <Register onRegister={() => fetchData()} /> : <Navigate to="/login" />} />
           <Route path="/" element={user ? <Selection user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} />
           <Route path="/financeiro" element={user ? <Dashboard user={user} transactions={transactions} onLogout={handleLogout} /> : <Navigate to="/login" />} />
-          <Route path="/receitas" element={user ? <Receitas user={user} transactions={transactions} onAdd={addTransaction} onDelete={(id) => deleteTransaction(id, 'receita')} /> : <Navigate to="/login" />} />
-          <Route path="/despesas" element={user ? <Despesas user={user} transactions={transactions} onAdd={addTransaction} onDelete={(id) => deleteTransaction(id, 'despesa')} /> : <Navigate to="/login" />} />
+          <Route path="/receitas" element={user ? <Receitas user={user} transactions={transactions} onAdd={addTransaction} onDelete={() => {}} /> : <Navigate to="/login" />} />
+          <Route path="/despesas" element={user ? <Despesas user={user} transactions={transactions} onAdd={addTransaction} onDelete={() => {}} /> : <Navigate to="/login" />} />
           <Route path="/pedidos" element={user ? <Orders user={user} orders={orders} orderItems={orderItems} clients={clients} onAdd={addOrderWithItems} onAddClient={addClient} onUpdateOrder={updateOrder} /> : <Navigate to="/login" />} />
           <Route path="/clientes" element={user ? <Clients user={user} clients={clients} onAdd={addClient} onDelete={() => {}} /> : <Navigate to="/login" />} />
           <Route path="/usuarios" element={user && user.role ? <Usuarios users={allUsers} onDelete={() => fetchData()} /> : <Navigate to="/" />} />
@@ -204,15 +245,14 @@ const App: React.FC = () => {
 
 const BottomNav: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
   const location = useLocation();
-  if (location.pathname === '/') return null;
-
+  if (location.pathname === '/' || location.pathname === '/login') return null;
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-rose-100 dark:border-slate-800 h-20 flex items-center justify-around px-2 md:hidden z-50 transition-colors shadow-[0_-10px_20px_rgba(225,29,72,0.05)]">
       <Link to="/" className="flex-1 flex flex-col items-center justify-center h-full text-gray-400">
         <i className="fa-solid fa-layer-group text-lg"></i>
         <span className="text-[10px] mt-1 font-bold">Portal</span>
       </Link>
-      <Link to="/financeiro" className={`flex-1 flex flex-col items-center justify-center h-full transition-all ${location.pathname.includes('financeiro') || location.pathname.includes('receitas') || location.pathname.includes('despesas') ? 'text-rose-600' : 'text-gray-400'}`}>
+      <Link to="/financeiro" className={`flex-1 flex flex-col items-center justify-center h-full transition-all ${location.pathname.includes('financeiro') ? 'text-rose-600' : 'text-gray-400'}`}>
         <i className="fa-solid fa-chart-pie text-lg"></i>
         <span className="text-[10px] mt-1 font-bold">Finanças</span>
       </Link>
