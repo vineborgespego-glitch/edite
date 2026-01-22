@@ -65,9 +65,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, transactions, onLogout }) =
           <Link to="/" className="w-10 h-10 bg-gray-50 dark:bg-slate-800 rounded-xl flex items-center justify-center border border-gray-100">
             <i className="fa-solid fa-chevron-left text-gray-400"></i>
           </Link>
-          <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-rose-50 overflow-hidden p-0.5">
-            <img src="logo.jpeg" alt="Logo" className="w-full h-full object-contain" />
-          </div>
           <div>
             <h2 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tighter">Financeiro</h2>
             <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Edite Borges</p>

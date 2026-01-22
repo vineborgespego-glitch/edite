@@ -49,12 +49,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-[#fffafb] dark:bg-slate-950 transition-colors relative">
-      {/* BRANDING - TOPO ESQUERDA */}
+      {/* BRANDING - APENAS TEXTO */}
       <div className="absolute top-6 left-6 flex items-center space-x-3">
-        <div className="w-14 h-14 bg-white rounded-2xl shadow-xl border border-rose-100 overflow-hidden p-0.5">
-          <img src="logo.jpeg" alt="Logo" className="w-full h-full object-contain" />
-        </div>
-        <div className="hidden sm:block text-left">
+        <div className="text-left">
           <p className="text-[12px] font-black text-rose-600 uppercase tracking-tighter leading-none">Atelier</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Edite Borges</p>
         </div>

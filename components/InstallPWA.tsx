@@ -29,8 +29,8 @@ const InstallPWA: React.FC = () => {
   return (
     <div className="fixed bottom-24 left-4 right-4 z-[100] animate-bounce-in">
       <div className="bg-white dark:bg-slate-900 border border-rose-100 dark:border-slate-800 rounded-[2rem] shadow-2xl p-6 flex flex-col items-center text-center space-y-4 max-w-sm mx-auto">
-        <div className="w-16 h-16 bg-white rounded-2xl shadow-sm p-1 border border-rose-50">
-          <img src="logo.jpeg" alt="Logo" className="w-full h-full object-contain" />
+        <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600">
+          <i className="fa-solid fa-mobile-screen-button text-3xl"></i>
         </div>
         
         <div>

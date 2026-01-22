@@ -174,9 +174,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         <Link to="/" className="w-10 h-10 bg-white dark:bg-slate-800 text-gray-400 dark:text-gray-200 rounded-xl flex items-center justify-center shadow-lg border border-rose-100 dark:border-slate-800 active:scale-90 transition-all">
           <i className="fa-solid fa-chevron-left"></i>
         </Link>
-        <div className="w-12 h-12 bg-white rounded-xl shadow-lg border border-rose-100 overflow-hidden p-0.5">
-          <img src="logo.jpeg" alt="Logo" className="w-full h-full object-contain" />
-        </div>
         <div className="hidden sm:block text-left">
           <p className="text-[10px] font-black text-rose-600 uppercase tracking-tighter leading-none">Atelier</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Edite Borges</p>
