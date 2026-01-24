@@ -126,9 +126,9 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     const itemsInOrder = getItemsForOrder(id);
     const totalVal = calculateOrderTotal(id);
     return (
-      <div id="receipt-to-print" className="bg-white text-black p-6 font-mono w-full max-w-[320px] mx-auto border-2 border-black">
+      <div id="receipt-to-print" className="bg-white text-black p-6 font-mono w-full max-w-[300px] mx-auto border-2 border-black">
         <div className="text-center mb-4 border-b-2 border-dashed border-black pb-2">
-          <h2 className="text-xl font-black uppercase">Atelier Edite Borges</h2>
+          <h2 className="text-lg font-black uppercase">Atelier Edite Borges</h2>
           <p className="text-[10px] font-bold">SERVIÇOS DE COSTURA E AJUSTES</p>
         </div>
         
@@ -160,7 +160,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         </div>
 
         <div className="text-center border-t-2 border-dashed border-black pt-2">
-          <p className="text-[10px] font-black uppercase">Previsão de Entrega:</p>
+          <p className="text-[10px] font-black uppercase">Entrega:</p>
           <p className="text-base font-black">{order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR'}</p>
         </div>
       </div>
@@ -169,85 +169,91 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
 
   return (
     <div className="flex flex-col min-h-screen bg-[#fffafb] dark:bg-slate-950 transition-colors pb-24 relative">
-      {/* CABEÇALHO */}
-      <div className="absolute top-6 left-6 flex items-center space-x-3 print:hidden">
-        <Link to="/" className="w-10 h-10 bg-white dark:bg-slate-800 text-gray-400 dark:text-gray-200 rounded-xl flex items-center justify-center shadow-lg border border-rose-100 dark:border-slate-800 active:scale-90 transition-all">
-          <i className="fa-solid fa-chevron-left"></i>
-        </Link>
-        <div className="hidden sm:block text-left">
-          <p className="text-[10px] font-black text-rose-600 uppercase tracking-tighter leading-none">Atelier</p>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Edite Borges</p>
-        </div>
-      </div>
       
-      <div className="absolute top-6 right-6 flex items-center space-x-3 print:hidden">
-        <ThemeToggle />
-        <button onClick={() => { resetForm(); setShowModal(true); }} className="w-10 h-10 bg-rose-600 text-white rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-all"><i className="fa-solid fa-plus"></i></button>
-      </div>
-
-      <main className="px-6 pt-24 space-y-4 print:hidden">
-        {/* FILTROS */}
-        <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-2">
-          {['Todos', 'em concerto', 'pronto', 'entregue'].map((f) => (
-            <button key={f} onClick={() => setFilter(f as any)} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${filter === f ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-900 text-gray-400 border border-gray-100 dark:border-slate-800'}`}>
-              {f === 'em concerto' ? 'Oficina' : f.charAt(0).toUpperCase() + f.slice(1)}
-            </button>
-          ))}
+      {/* TUDO DENTRO DESTA DIV SERÁ ESCONDIDO NA IMPRESSÃO */}
+      <div className="print:hidden">
+        {/* CABEÇALHO */}
+        <div className="absolute top-6 left-6 flex items-center space-x-3">
+          <Link to="/" className="w-10 h-10 bg-white dark:bg-slate-800 text-gray-400 dark:text-gray-200 rounded-xl flex items-center justify-center shadow-lg border border-rose-100 dark:border-slate-800 active:scale-90 transition-all">
+            <i className="fa-solid fa-chevron-left"></i>
+          </Link>
+          <div className="hidden sm:block text-left">
+            <p className="text-[10px] font-black text-rose-600 uppercase tracking-tighter leading-none">Atelier</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Edite Borges</p>
+          </div>
+        </div>
+        
+        <div className="absolute top-6 right-6 flex items-center space-x-3">
+          <ThemeToggle />
+          <button onClick={() => { resetForm(); setShowModal(true); }} className="w-10 h-10 bg-rose-600 text-white rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-all">
+            <i className="fa-solid fa-plus"></i>
+          </button>
         </div>
 
-        {/* LISTAGEM */}
-        {filteredOrders.map(order => {
-          const orderItemsList = getItemsForOrder(order.id_pedido);
-          const orderTotal = calculateOrderTotal(order.id_pedido);
-          
-          return (
-            <div key={order.id_pedido} className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm space-y-4 text-left transition-all">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="font-black text-gray-900 dark:text-white truncate">{getClientName(order.id_cliente)}</h3>
-                  <div className="mt-2 space-y-1.5 min-h-[1.5rem]">
-                    {orderItemsList.length > 0 ? (
-                      orderItemsList.slice(0, 5).map((item, idx) => (
-                        <div key={idx}>
-                          <p className="text-[11px] text-gray-700 dark:text-gray-200 font-bold leading-tight uppercase">• {item.descreçao} ({item.quantidade}x)</p>
-                          {item.obicervação && <p className="text-[9px] italic text-rose-500 ml-3 opacity-90">Obs: {item.obicervação}</p>}
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-[9px] text-gray-400 italic">Nenhum item vinculado...</p>
+        <main className="px-6 pt-24 space-y-4">
+          {/* FILTROS */}
+          <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-2">
+            {['Todos', 'em concerto', 'pronto', 'entregue'].map((f) => (
+              <button key={f} onClick={() => setFilter(f as any)} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${filter === f ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-900 text-gray-400 border border-gray-100 dark:border-slate-800'}`}>
+                {f === 'em concerto' ? 'Oficina' : f.charAt(0).toUpperCase() + f.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* LISTAGEM */}
+          {filteredOrders.map(order => {
+            const orderItemsList = getItemsForOrder(order.id_pedido);
+            const orderTotal = calculateOrderTotal(order.id_pedido);
+            
+            return (
+              <div key={order.id_pedido} className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm space-y-4 text-left transition-all">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-black text-gray-900 dark:text-white truncate">{getClientName(order.id_cliente)}</h3>
+                    <div className="mt-2 space-y-1.5 min-h-[1.5rem]">
+                      {orderItemsList.length > 0 ? (
+                        orderItemsList.slice(0, 5).map((item, idx) => (
+                          <div key={idx}>
+                            <p className="text-[11px] text-gray-700 dark:text-gray-200 font-bold leading-tight uppercase">• {item.descreçao} ({item.quantidade}x)</p>
+                            {item.obicervação && <p className="text-[9px] italic text-rose-500 ml-3 opacity-90">Obs: {item.obicervação}</p>}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-[9px] text-gray-400 italic">Nenhum item vinculado...</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end space-y-2">
+                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColors[order.status]}`}>{order.status}</span>
+                    <button onClick={() => setPrintOrderId(order.id_pedido)} className="w-8 h-8 bg-gray-50 dark:bg-slate-800 text-gray-400 rounded-lg flex items-center justify-center shadow-sm"><i className="fa-solid fa-receipt text-xs"></i></button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t border-gray-50 dark:border-slate-800">
+                  <div className="flex flex-col">
+                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Total</p>
+                    <p className="text-sm font-black text-rose-600">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(orderTotal)}</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button onClick={() => onUpdateOrder(order.id_pedido, { pago: !order.pago })} className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${order.pago ? 'bg-green-50 text-green-600 border-green-200' : 'bg-rose-50 text-rose-600 border-rose-200'}`}>
+                      {order.pago ? 'Pago' : 'Pendente'}
+                    </button>
+                    {order.status !== 'entregue' && (
+                      <button 
+                        onClick={() => handleStatusUpdate(order)} 
+                        className="px-3 py-2 bg-rose-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                      >
+                        {order.status === 'em concerto' ? 'Pronto' : 'Entregar'}
+                      </button>
                     )}
                   </div>
                 </div>
-                <div className="flex flex-col items-end space-y-2">
-                  <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColors[order.status]}`}>{order.status}</span>
-                  <button onClick={() => setPrintOrderId(order.id_pedido)} className="w-8 h-8 bg-gray-50 dark:bg-slate-800 text-gray-400 rounded-lg flex items-center justify-center shadow-sm"><i className="fa-solid fa-receipt text-xs"></i></button>
-                </div>
               </div>
-              <div className="flex items-center justify-between pt-3 border-t border-gray-50 dark:border-slate-800">
-                <div className="flex flex-col">
-                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Total</p>
-                  <p className="text-sm font-black text-rose-600">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(orderTotal)}</p>
-                </div>
-                <div className="flex space-x-2">
-                  <button onClick={() => onUpdateOrder(order.id_pedido, { pago: !order.pago })} className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${order.pago ? 'bg-green-50 text-green-600 border-green-200' : 'bg-rose-50 text-rose-600 border-rose-200'}`}>
-                    {order.pago ? 'Pago' : 'Pendente'}
-                  </button>
-                  {order.status !== 'entregue' && (
-                    <button 
-                      onClick={() => handleStatusUpdate(order)} 
-                      className="px-3 py-2 bg-rose-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
-                    >
-                      {order.status === 'em concerto' ? 'Pronto' : 'Entregar'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </main>
+            );
+          })}
+        </main>
+      </div>
 
-      {/* MODAL NOVO PEDIDO */}
+      {/* MODAL NOVO PEDIDO (ESCONDIDO NA IMPRESSÃO) */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-end justify-center px-4 sm:px-0 print:hidden">
           <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar transition-colors">
@@ -318,7 +324,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
 
       {/* PREVIEW E IMPRESSÃO DA NOTA */}
       {printOrderId && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-6 print:absolute print:inset-0 print:bg-white print:p-0 print:z-auto">
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-6 print:static print:block print:bg-white print:p-0 print:z-auto print:h-auto">
           <button onClick={() => setPrintOrderId(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center transition-colors print:hidden"><i className="fa-solid fa-xmark"></i></button>
           
           <div className="mb-8 print:mb-0 print:w-full">
@@ -337,27 +343,23 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         .animate-slide-up { animation: slide-up 0.3s ease-out; }
         
         @media print {
-          /* Esconde tudo o que está no root do React */
+          /* RESETA O CORPO DO DOCUMENTO */
+          body {
+            background-color: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: auto !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          /* ESCONDE O ROOT DO REACT E QUALQUER OUTRA DIV FIXA */
           #root {
             display: none !important;
           }
           
-          /* Esconde outros elementos que possam ter sobrado no body */
-          body > *:not(.fixed) {
-            display: none !important;
-          }
-          
-          /* Reseta o body para impressão */
-          body {
-            margin: 0 !important;
-            padding: 0 !important;
-            background: white !important;
-            color: black !important;
-            height: auto !important;
-            overflow: visible !important;
-          }
-
-          /* Garante que o container de impressão fique visível e tome a página toda */
+          /* FORÇA A EXIBIÇÃO APENAS DA NOTINHA */
           .fixed.inset-0.bg-black\/95 {
             display: block !important;
             position: absolute !important;
@@ -365,31 +367,27 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
             left: 0 !important;
             width: 100% !important;
             height: auto !important;
-            background: white !important;
+            background-color: white !important;
             padding: 0 !important;
             margin: 0 !important;
+            z-index: 99999 !important;
           }
 
-          /* Ocupa apenas o espaço necessário para o recibo no topo */
           #receipt-to-print {
             display: block !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            max-width: 320px !important; /* Tamanho padrão de impressora térmica */
+            visibility: visible !important;
             border: 2px solid black !important;
             padding: 15px !important;
-            margin: 0 !important;
-            background: white !important;
-            color: black !important;
-            visibility: visible !important;
+            margin: 0 auto !important;
+            width: 100% !important;
+            max-width: 300px !important;
+            position: relative !important;
+            top: 0 !important;
           }
 
-          /* Força as fontes a serem pretas mesmo que o sistema esteja em modo escuro */
           #receipt-to-print * {
-            color: black !important;
             visibility: visible !important;
+            color: black !important;
           }
 
           @page {
