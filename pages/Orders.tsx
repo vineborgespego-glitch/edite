@@ -126,7 +126,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     const itemsInOrder = getItemsForOrder(id);
     const totalVal = calculateOrderTotal(id);
     return (
-      <div id="receipt-printable-content" className="receipt-paper bg-white text-black p-8 shadow-inner mx-auto max-w-[340px] font-mono border-t-[12px] border-black flex flex-col items-stretch">
+      <div id="receipt-printable-content" className="receipt-paper bg-white text-black p-8 shadow-inner mx-auto max-w-[340px] font-mono border-t-[12px] border-black flex flex-col items-stretch print-target">
         <div className="text-center mb-6 border-b-4 border-dashed border-black pb-4">
           <h2 className="text-[22px] font-[900] uppercase text-black leading-tight">Atelier Edite Borges</h2>
           <p className="text-[10px] font-bold text-black">SERVIÇOS DE COSTURA E AJUSTES</p>
@@ -169,8 +169,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
 
   return (
     <div className="flex flex-col min-h-screen bg-[#fffafb] dark:bg-slate-950 transition-colors pb-24 relative">
-      <div className="absolute top-6 left-6 flex items-center space-x-3">
-        {/* BOTÃO VOLTAR */}
+      <div className="absolute top-6 left-6 flex items-center space-x-3 print:hidden">
         <Link to="/" className="w-10 h-10 bg-white dark:bg-slate-800 text-gray-400 dark:text-gray-200 rounded-xl flex items-center justify-center shadow-lg border border-rose-100 dark:border-slate-800 active:scale-90 transition-all">
           <i className="fa-solid fa-chevron-left"></i>
         </Link>
@@ -179,12 +178,12 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Edite Borges</p>
         </div>
       </div>
-      <div className="absolute top-6 right-6 flex items-center space-x-3">
+      <div className="absolute top-6 right-6 flex items-center space-x-3 print:hidden">
         <ThemeToggle />
         <button onClick={() => { resetForm(); setShowModal(true); }} className="w-10 h-10 bg-rose-600 text-white rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-all"><i className="fa-solid fa-plus"></i></button>
       </div>
 
-      <main className="px-6 pt-24 space-y-4">
+      <main className="px-6 pt-24 space-y-4 print:hidden">
         <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-2">
           {['Todos', 'em concerto', 'pronto', 'entregue'].map((f) => (
             <button key={f} onClick={() => setFilter(f as any)} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${filter === f ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-900 text-gray-400 border border-gray-100 dark:border-slate-800'}`}>
@@ -245,7 +244,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
       </main>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-end justify-center px-4 sm:px-0">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-end justify-center px-4 sm:px-0 print:hidden">
           <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar transition-colors">
             <h2 className="text-xl font-black text-gray-900 dark:text-white text-left">Novo Pedido</h2>
             <form onSubmit={handleSubmit} className="space-y-6 pb-10 text-left">
@@ -313,29 +312,72 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
       )}
 
       {printOrderId && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-6 overflow-y-auto no-scrollbar">
-          <button onClick={() => setPrintOrderId(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center transition-colors"><i className="fa-solid fa-xmark"></i></button>
-          <div className="mb-8">{renderReceiptPreview(printOrderId)}</div>
-          <button onClick={() => window.print()} className="px-8 py-4 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl flex items-center space-x-2 shadow-xl active:scale-95 transition-all"><i className="fa-solid fa-print"></i><span>Imprimir Recibo</span></button>
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-6 overflow-y-auto no-scrollbar print:static print:bg-white print:p-0">
+          <button onClick={() => setPrintOrderId(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center transition-colors print:hidden"><i className="fa-solid fa-xmark"></i></button>
+          <div className="mb-8 print:m-0">{renderReceiptPreview(printOrderId)}</div>
+          <button onClick={() => window.print()} className="px-8 py-4 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl flex items-center space-x-2 shadow-xl active:scale-95 transition-all print:hidden"><i className="fa-solid fa-print"></i><span>Imprimir Recibo</span></button>
         </div>
       )}
 
       <style>{`
         @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .animate-slide-up { animation: slide-up 0.3s ease-out; }
+        
         @media print {
-          body * { visibility: hidden !important; }
-          #receipt-printable-content, #receipt-printable-content * { visibility: visible !important; color: black !important; background: white !important; }
-          #receipt-printable-content { 
-            position: fixed; 
-            left: 50%; 
-            top: 0; 
-            transform: translateX(-50%);
-            width: 100%; 
-            border: none !important;
+          /* Esconde absolutamente tudo por padrão */
+          body * { 
+            display: none !important; 
+          }
+          
+          /* Mostra apenas o container do recibo e seus filhos */
+          body, html {
+            height: auto !important;
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+
+          #root, #root * {
+            display: none !important;
+          }
+
+          /* Força a exibição apenas do que é necessário para o recibo */
+          .print-target, .print-target * {
+            display: block !important;
+          }
+
+          .fixed.inset-0.bg-black\/95 {
+            display: flex !important;
+            position: static !important;
+            background: white !important;
             padding: 0 !important;
             margin: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            inset: auto !important;
+          }
+
+          /* O conteúdo real do recibo */
+          #receipt-printable-content {
+            display: flex !important;
+            flex-direction: column !important;
+            position: relative !important;
+            margin: 0 auto !important;
+            border: none !important;
             box-shadow: none !important;
+            width: 100% !important;
+            max-width: 320px !important; /* Ajuste comum para impressoras térmicas */
+            padding: 10px !important;
+          }
+
+          /* Esconde botões dentro do modal de impressão */
+          .fixed.inset-0.bg-black\/95 button {
+            display: none !important;
+          }
+
+          @page {
+            margin: 0;
+            size: auto;
           }
         }
       `}</style>
