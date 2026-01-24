@@ -120,15 +120,15 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     }
   };
 
-  const renderReceiptPreview = (id: number) => {
+  const renderReceiptContent = (id: number) => {
     const order = orders.find(o => o.id_pedido === id);
     if (!order) return null;
     const itemsInOrder = getItemsForOrder(id);
     const totalVal = calculateOrderTotal(id);
     return (
-      <div id="receipt-to-print" className="bg-white text-black p-6 font-mono w-full max-w-[300px] mx-auto border-2 border-black">
+      <div className="receipt-content-wrapper bg-white text-black p-4 font-mono w-full max-w-[300px] mx-auto border-2 border-black">
         <div className="text-center mb-4 border-b-2 border-dashed border-black pb-2">
-          <h2 className="text-lg font-black uppercase">Atelier Edite Borges</h2>
+          <h2 className="text-lg font-black uppercase leading-tight">Atelier Edite Borges</h2>
           <p className="text-[10px] font-bold">SERVIÇOS DE COSTURA E AJUSTES</p>
         </div>
         
@@ -168,10 +168,9 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#fffafb] dark:bg-slate-950 transition-colors pb-24 relative">
-      
-      {/* TUDO DENTRO DESTA DIV SERÁ ESCONDIDO NA IMPRESSÃO */}
-      <div className="print:hidden">
+    <>
+      {/* TELA PRINCIPAL DO APP - ESCONDIDA DURANTE IMPRESSÃO */}
+      <div className="flex flex-col min-h-screen bg-[#fffafb] dark:bg-slate-950 transition-colors pb-24 relative print:hidden">
         {/* CABEÇALHO */}
         <div className="absolute top-6 left-6 flex items-center space-x-3">
           <Link to="/" className="w-10 h-10 bg-white dark:bg-slate-800 text-gray-400 dark:text-gray-200 rounded-xl flex items-center justify-center shadow-lg border border-rose-100 dark:border-slate-800 active:scale-90 transition-all">
@@ -251,84 +250,84 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
             );
           })}
         </main>
+
+        {/* MODAL NOVO PEDIDO */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-end justify-center px-4 sm:px-0">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar transition-colors">
+              <h2 className="text-xl font-black text-gray-900 dark:text-white text-left">Novo Pedido</h2>
+              <form onSubmit={handleSubmit} className="space-y-6 pb-10 text-left">
+                <div className="flex p-1 bg-gray-100 dark:bg-slate-800 rounded-2xl">
+                  <button type="button" onClick={() => setClientType('existing')} className={`flex-1 py-3 text-[10px] font-black uppercase rounded-xl transition-all ${clientType === 'existing' ? 'bg-white dark:bg-slate-700 text-rose-600 shadow-sm' : 'text-gray-400'}`}>Existente</button>
+                  <button type="button" onClick={() => setClientType('new')} className={`flex-1 py-3 text-[10px] font-black uppercase rounded-xl transition-all ${clientType === 'new' ? 'bg-white dark:bg-slate-700 text-rose-600 shadow-sm' : 'text-gray-400'}`}>Novo</button>
+                </div>
+
+                {clientType === 'existing' ? (
+                  <select required className="w-full p-4 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white rounded-2xl border border-gray-100 dark:border-slate-700 text-sm font-bold" value={selectedClientId} onChange={e => setSelectedClientId(e.target.value)}>
+                    <option value="">Buscar cliente...</option>
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                  </select>
+                ) : (
+                  <div className="space-y-4">
+                    <input required className="w-full p-4 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white rounded-2xl border border-gray-100" placeholder="Nome do Cliente" value={newClientNome} onChange={e => setNewClientNome(e.target.value)} />
+                    <input required className="w-full p-4 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white rounded-2xl border border-gray-100" placeholder="Telefone" value={newClientNumero} onChange={e => setNewClientNumero(e.target.value)} />
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Serviços</h3>
+                    <button type="button" onClick={addItemRow} className="text-rose-600 font-black text-[9px] uppercase bg-rose-50 px-3 py-1.5 rounded-full">+ Item</button>
+                  </div>
+                  {items.map((item, index) => (
+                    <div key={index} className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-3xl space-y-3 relative border border-gray-100 dark:border-slate-800 transition-all">
+                      <input required className="w-full p-3 bg-white dark:bg-slate-900 text-xs text-gray-900 dark:text-white rounded-xl border border-gray-100" placeholder="Descrição (ex: Barra Calça)" value={item.descreçao} onChange={e => updateItem(index, 'descreçao', e.target.value)} />
+                      <div className="grid grid-cols-2 gap-3">
+                        <input required type="number" className="w-full p-3 bg-white dark:bg-slate-900 text-xs rounded-xl border border-gray-100" placeholder="Qtd" value={item.quantidade} onChange={e => updateItem(index, 'quantidade', e.target.value)} />
+                        <input required type="number" step="0.01" className="w-full p-3 bg-white dark:bg-slate-900 text-xs rounded-xl border border-gray-100" placeholder="R$ Unit." value={item.valor_unidade} onChange={e => updateItem(index, 'valor_unidade', e.target.value)} />
+                      </div>
+                      <textarea 
+                        className="w-full p-3 bg-white dark:bg-slate-900 text-[10px] text-gray-600 dark:text-gray-300 rounded-xl border border-gray-100 dark:border-slate-800 outline-none focus:ring-1 focus:ring-rose-500 transition-all italic" 
+                        placeholder="Observações do item (opcional)..." 
+                        value={item.obicervação} 
+                        onChange={e => updateItem(index, 'obicervação', e.target.value)}
+                        rows={2}
+                      />
+                      {items.length > 1 && <button type="button" onClick={() => removeItemRow(index)} className="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-[10px]"><i className="fa-solid fa-trash"></i></button>}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between bg-gray-50 dark:bg-slate-800 p-5 rounded-3xl">
+                  <span className="text-[10px] font-black uppercase text-gray-500">Já está pago?</span>
+                  <button type="button" onClick={() => setEstaPago(!estaPago)} className={`w-12 h-6 rounded-full relative transition-all ${estaPago ? 'bg-green-500' : 'bg-gray-300'}`}><div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${estaPago ? 'left-7' : 'left-1'}`}></div></button>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="w-full text-left">
+                    <label className="block text-[9px] font-black uppercase text-gray-400 mb-1 ml-1">Previsão Entrega</label>
+                    <input required type="date" className="w-full p-4 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white rounded-2xl border border-gray-100" value={dataEntrega} onChange={e => setDataEntrega(e.target.value)} />
+                  </div>
+                  <div className="w-full p-6 bg-rose-600 rounded-[2rem] text-white flex flex-col justify-center">
+                    <p className="text-[9px] font-bold uppercase opacity-70">Total Pedido</p>
+                    <p className="text-xl font-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(grandTotal)}</p>
+                  </div>
+                </div>
+
+                <button type="submit" className="w-full py-5 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all">Salvar Pedido</button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* MODAL NOVO PEDIDO (ESCONDIDO NA IMPRESSÃO) */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-end justify-center px-4 sm:px-0 print:hidden">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar transition-colors">
-            <h2 className="text-xl font-black text-gray-900 dark:text-white text-left">Novo Pedido</h2>
-            <form onSubmit={handleSubmit} className="space-y-6 pb-10 text-left">
-              <div className="flex p-1 bg-gray-100 dark:bg-slate-800 rounded-2xl">
-                <button type="button" onClick={() => setClientType('existing')} className={`flex-1 py-3 text-[10px] font-black uppercase rounded-xl transition-all ${clientType === 'existing' ? 'bg-white dark:bg-slate-700 text-rose-600 shadow-sm' : 'text-gray-400'}`}>Existente</button>
-                <button type="button" onClick={() => setClientType('new')} className={`flex-1 py-3 text-[10px] font-black uppercase rounded-xl transition-all ${clientType === 'new' ? 'bg-white dark:bg-slate-700 text-rose-600 shadow-sm' : 'text-gray-400'}`}>Novo</button>
-              </div>
-
-              {clientType === 'existing' ? (
-                <select required className="w-full p-4 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white rounded-2xl border border-gray-100 dark:border-slate-700 text-sm font-bold" value={selectedClientId} onChange={e => setSelectedClientId(e.target.value)}>
-                  <option value="">Buscar cliente...</option>
-                  {clients.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                </select>
-              ) : (
-                <div className="space-y-4">
-                  <input required className="w-full p-4 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white rounded-2xl border border-gray-100" placeholder="Nome do Cliente" value={newClientNome} onChange={e => setNewClientNome(e.target.value)} />
-                  <input required className="w-full p-4 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white rounded-2xl border border-gray-100" placeholder="Telefone" value={newClientNumero} onChange={e => setNewClientNumero(e.target.value)} />
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Serviços</h3>
-                  <button type="button" onClick={addItemRow} className="text-rose-600 font-black text-[9px] uppercase bg-rose-50 px-3 py-1.5 rounded-full">+ Item</button>
-                </div>
-                {items.map((item, index) => (
-                  <div key={index} className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-3xl space-y-3 relative border border-gray-100 dark:border-slate-800 transition-all">
-                    <input required className="w-full p-3 bg-white dark:bg-slate-900 text-xs text-gray-900 dark:text-white rounded-xl border border-gray-100" placeholder="Descrição (ex: Barra Calça)" value={item.descreçao} onChange={e => updateItem(index, 'descreçao', e.target.value)} />
-                    <div className="grid grid-cols-2 gap-3">
-                      <input required type="number" className="w-full p-3 bg-white dark:bg-slate-900 text-xs rounded-xl border border-gray-100" placeholder="Qtd" value={item.quantidade} onChange={e => updateItem(index, 'quantidade', e.target.value)} />
-                      <input required type="number" step="0.01" className="w-full p-3 bg-white dark:bg-slate-900 text-xs rounded-xl border border-gray-100" placeholder="R$ Unit." value={item.valor_unidade} onChange={e => updateItem(index, 'valor_unidade', e.target.value)} />
-                    </div>
-                    <textarea 
-                      className="w-full p-3 bg-white dark:bg-slate-900 text-[10px] text-gray-600 dark:text-gray-300 rounded-xl border border-gray-100 dark:border-slate-800 outline-none focus:ring-1 focus:ring-rose-500 transition-all italic" 
-                      placeholder="Observações do item (opcional)..." 
-                      value={item.obicervação} 
-                      onChange={e => updateItem(index, 'obicervação', e.target.value)}
-                      rows={2}
-                    />
-                    {items.length > 1 && <button type="button" onClick={() => removeItemRow(index)} className="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-[10px]"><i className="fa-solid fa-trash"></i></button>}
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between bg-gray-50 dark:bg-slate-800 p-5 rounded-3xl">
-                <span className="text-[10px] font-black uppercase text-gray-500">Já está pago?</span>
-                <button type="button" onClick={() => setEstaPago(!estaPago)} className={`w-12 h-6 rounded-full relative transition-all ${estaPago ? 'bg-green-500' : 'bg-gray-300'}`}><div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${estaPago ? 'left-7' : 'left-1'}`}></div></button>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="w-full text-left">
-                  <label className="block text-[9px] font-black uppercase text-gray-400 mb-1 ml-1">Previsão Entrega</label>
-                  <input required type="date" className="w-full p-4 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white rounded-2xl border border-gray-100" value={dataEntrega} onChange={e => setDataEntrega(e.target.value)} />
-                </div>
-                <div className="w-full p-6 bg-rose-600 rounded-[2rem] text-white flex flex-col justify-center">
-                  <p className="text-[9px] font-bold uppercase opacity-70">Total Pedido</p>
-                  <p className="text-xl font-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(grandTotal)}</p>
-                </div>
-              </div>
-
-              <button type="submit" className="w-full py-5 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all">Salvar Pedido</button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* PREVIEW E IMPRESSÃO DA NOTA */}
+      {/* MODAL DE PREVIEW E IMPRESSÃO - FORA DA DIV QUE É ESCONDIDA NA IMPRESSÃO */}
       {printOrderId && (
         <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-6 print:static print:block print:bg-white print:p-0 print:z-auto print:h-auto">
           <button onClick={() => setPrintOrderId(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center transition-colors print:hidden"><i className="fa-solid fa-xmark"></i></button>
           
           <div className="mb-8 print:mb-0 print:w-full">
-            {renderReceiptPreview(printOrderId)}
+            {renderReceiptContent(printOrderId)}
           </div>
           
           <button onClick={() => window.print()} className="px-8 py-4 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl flex items-center space-x-2 shadow-xl active:scale-95 transition-all print:hidden">
@@ -343,51 +342,55 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         .animate-slide-up { animation: slide-up 0.3s ease-out; }
         
         @media print {
-          /* RESETA O CORPO DO DOCUMENTO */
-          body {
+          /* RESET GERAL DE IMPRESSÃO */
+          body, html {
             background-color: white !important;
             margin: 0 !important;
             padding: 0 !important;
             height: auto !important;
+            width: 100% !important;
             overflow: visible !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
+            color: black !important;
           }
 
-          /* ESCONDE O ROOT DO REACT E QUALQUER OUTRA DIV FIXA */
-          #root {
+          /* ESCONDE O CONTEÚDO DO REACT COMPLETAMENTE */
+          #root > div:first-child {
             display: none !important;
           }
-          
-          /* FORÇA A EXIBIÇÃO APENAS DA NOTINHA */
-          .fixed.inset-0.bg-black\/95 {
+
+          /* FORÇA A EXIBIÇÃO APENAS DO CONTEÚDO DO RECIBO */
+          .fixed.inset-0 {
             display: block !important;
             position: absolute !important;
             top: 0 !important;
             left: 0 !important;
             width: 100% !important;
-            height: auto !important;
             background-color: white !important;
             padding: 0 !important;
             margin: 0 !important;
-            z-index: 99999 !important;
           }
 
-          #receipt-to-print {
+          /* GARANTE QUE O WRAPPER DO RECIBO ESTEJA VISÍVEL */
+          .receipt-content-wrapper {
             display: block !important;
             visibility: visible !important;
-            border: 2px solid black !important;
-            padding: 15px !important;
             margin: 0 auto !important;
             width: 100% !important;
             max-width: 300px !important;
-            position: relative !important;
-            top: 0 !important;
+            border: 2px solid black !important;
+            background-color: white !important;
+            color: black !important;
           }
 
-          #receipt-to-print * {
+          .receipt-content-wrapper * {
             visibility: visible !important;
             color: black !important;
+            background: none !important;
+          }
+
+          /* OCULTA BOTÕES E ELEMENTOS AUXILIARES */
+          button, i, .print-hidden {
+            display: none !important;
           }
 
           @page {
@@ -396,7 +399,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           }
         }
       `}</style>
-    </div>
+    </>
   );
 };
 
