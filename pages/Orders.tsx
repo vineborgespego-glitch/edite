@@ -126,42 +126,42 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     const itemsInOrder = getItemsForOrder(id);
     const totalVal = calculateOrderTotal(id);
     return (
-      <div id="receipt-printable-content" className="receipt-paper bg-white text-black p-8 shadow-inner mx-auto max-w-[340px] font-mono border-t-[12px] border-black flex flex-col items-stretch print-target">
-        <div className="text-center mb-6 border-b-4 border-dashed border-black pb-4">
-          <h2 className="text-[22px] font-[900] uppercase text-black leading-tight">Atelier Edite Borges</h2>
-          <p className="text-[10px] font-bold text-black">SERVIÇOS DE COSTURA E AJUSTES</p>
+      <div id="receipt-to-print" className="bg-white text-black p-6 font-mono w-full max-w-[320px] mx-auto border-2 border-black">
+        <div className="text-center mb-4 border-b-2 border-dashed border-black pb-2">
+          <h2 className="text-xl font-black uppercase">Atelier Edite Borges</h2>
+          <p className="text-[10px] font-bold">SERVIÇOS DE COSTURA E AJUSTES</p>
         </div>
-        <div className="text-[12px] space-y-1 mb-4 text-black font-bold">
-          <div className="flex justify-between"><span>PEDIDO:</span><span>#{order.id_pedido}</span></div>
-          <div className="flex justify-between"><span>DATA:</span><span>{new Date(order.created_at).toLocaleDateString('pt-BR')}</span></div>
-          <div className="flex justify-between"><span>CLIENTE:</span><span className="truncate uppercase">{getClientName(order.id_cliente)}</span></div>
+        
+        <div className="text-[11px] space-y-1 mb-4 font-bold uppercase">
+          <div className="flex justify-between"><span>Pedido:</span><span>#{order.id_pedido}</span></div>
+          <div className="flex justify-between"><span>Data:</span><span>{new Date(order.created_at).toLocaleDateString('pt-BR')}</span></div>
+          <div className="flex justify-between"><span>Cliente:</span><span>{getClientName(order.id_cliente)}</span></div>
         </div>
-        <div className="border-t-2 border-b-2 border-dashed border-black py-3 mb-4">
-          <p className="text-[10px] font-black uppercase mb-2 underline text-black">Itens:</p>
+
+        <div className="border-t-2 border-b-2 border-dashed border-black py-2 mb-4">
           {itemsInOrder.map((item, idx) => (
-            <div key={idx} className="mb-3 border-b border-gray-100 pb-1 last:border-0">
-              <div className="flex justify-between text-[11px] font-bold text-black">
-                <span className="flex-1 uppercase">{item.quantidade}x {item.descreçao}</span>
-                <span className="font-black text-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(item.total))}</span>
+            <div key={idx} className="mb-2 text-[11px]">
+              <div className="flex justify-between font-bold">
+                <span className="uppercase">{item.quantidade}x {item.descreçao}</span>
+                <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(item.total))}</span>
               </div>
-              {item.obicervação && (
-                <p className="text-[9px] italic text-gray-700 mt-0.5 border-l-2 border-gray-300 pl-2 leading-tight">
-                  {item.obicervação}
-                </p>
-              )}
+              {item.obicervação && <p className="text-[9px] italic opacity-80 pl-2">-- {item.obicervação}</p>}
             </div>
           ))}
         </div>
-        <div className="flex justify-between items-center mb-6 text-black">
-          <span className="text-[11px] font-black">TOTAL:</span>
-          <span className="text-[20px] font-black underline">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
+
+        <div className="flex justify-between items-center mb-4">
+          <span className="text-sm font-black uppercase underline">Total:</span>
+          <span className="text-xl font-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
         </div>
-        <div className="text-center py-2 px-4 border-2 border-black rounded mb-6 text-black">
-          <span className="text-sm font-black uppercase">{order.pago ? '*** PAGO ***' : '--- PENDENTE ---'}</span>
+
+        <div className="text-center py-1 px-4 border border-black rounded mb-4">
+          <span className="text-xs font-black uppercase">{order.pago ? 'PAGO' : 'PAGAMENTO PENDENTE'}</span>
         </div>
-        <div className="text-center border-t-2 border-dashed border-black pt-4 text-black">
-          <p className="text-[10px] font-black uppercase mb-1">Previsão Entrega:</p>
-          <p className="text-lg font-black">{order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR'}</p>
+
+        <div className="text-center border-t-2 border-dashed border-black pt-2">
+          <p className="text-[10px] font-black uppercase">Previsão de Entrega:</p>
+          <p className="text-base font-black">{order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR'}</p>
         </div>
       </div>
     );
@@ -169,6 +169,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
 
   return (
     <div className="flex flex-col min-h-screen bg-[#fffafb] dark:bg-slate-950 transition-colors pb-24 relative">
+      {/* CABEÇALHO */}
       <div className="absolute top-6 left-6 flex items-center space-x-3 print:hidden">
         <Link to="/" className="w-10 h-10 bg-white dark:bg-slate-800 text-gray-400 dark:text-gray-200 rounded-xl flex items-center justify-center shadow-lg border border-rose-100 dark:border-slate-800 active:scale-90 transition-all">
           <i className="fa-solid fa-chevron-left"></i>
@@ -178,12 +179,14 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Edite Borges</p>
         </div>
       </div>
+      
       <div className="absolute top-6 right-6 flex items-center space-x-3 print:hidden">
         <ThemeToggle />
         <button onClick={() => { resetForm(); setShowModal(true); }} className="w-10 h-10 bg-rose-600 text-white rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-all"><i className="fa-solid fa-plus"></i></button>
       </div>
 
       <main className="px-6 pt-24 space-y-4 print:hidden">
+        {/* FILTROS */}
         <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-2">
           {['Todos', 'em concerto', 'pronto', 'entregue'].map((f) => (
             <button key={f} onClick={() => setFilter(f as any)} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${filter === f ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-900 text-gray-400 border border-gray-100 dark:border-slate-800'}`}>
@@ -192,6 +195,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           ))}
         </div>
 
+        {/* LISTAGEM */}
         {filteredOrders.map(order => {
           const orderItemsList = getItemsForOrder(order.id_pedido);
           const orderTotal = calculateOrderTotal(order.id_pedido);
@@ -243,6 +247,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         })}
       </main>
 
+      {/* MODAL NOVO PEDIDO */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-end justify-center px-4 sm:px-0 print:hidden">
           <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar transition-colors">
@@ -311,11 +316,19 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         </div>
       )}
 
+      {/* PREVIEW E IMPRESSÃO DA NOTA */}
       {printOrderId && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-6 overflow-y-auto no-scrollbar print:static print:bg-white print:p-0">
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-6 print:absolute print:inset-0 print:bg-white print:p-0 print:z-auto">
           <button onClick={() => setPrintOrderId(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center transition-colors print:hidden"><i className="fa-solid fa-xmark"></i></button>
-          <div className="mb-8 print:m-0">{renderReceiptPreview(printOrderId)}</div>
-          <button onClick={() => window.print()} className="px-8 py-4 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl flex items-center space-x-2 shadow-xl active:scale-95 transition-all print:hidden"><i className="fa-solid fa-print"></i><span>Imprimir Recibo</span></button>
+          
+          <div className="mb-8 print:mb-0 print:w-full">
+            {renderReceiptPreview(printOrderId)}
+          </div>
+          
+          <button onClick={() => window.print()} className="px-8 py-4 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl flex items-center space-x-2 shadow-xl active:scale-95 transition-all print:hidden">
+            <i className="fa-solid fa-print"></i>
+            <span>Imprimir Recibo</span>
+          </button>
         </div>
       )}
 
@@ -324,55 +337,59 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         .animate-slide-up { animation: slide-up 0.3s ease-out; }
         
         @media print {
-          /* Esconde absolutamente tudo por padrão */
-          body * { 
-            display: none !important; 
+          /* Esconde tudo o que está no root do React */
+          #root {
+            display: none !important;
           }
           
-          /* Mostra apenas o container do recibo e seus filhos */
-          body, html {
-            height: auto !important;
-            background: white !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-
-          #root, #root * {
+          /* Esconde outros elementos que possam ter sobrado no body */
+          body > *:not(.fixed) {
             display: none !important;
           }
-
-          /* Força a exibição apenas do que é necessário para o recibo */
-          .print-target, .print-target * {
-            display: block !important;
+          
+          /* Reseta o body para impressão */
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            color: black !important;
+            height: auto !important;
+            overflow: visible !important;
           }
 
+          /* Garante que o container de impressão fique visível e tome a página toda */
           .fixed.inset-0.bg-black\/95 {
-            display: flex !important;
-            position: static !important;
+            display: block !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: auto !important;
             background: white !important;
             padding: 0 !important;
             margin: 0 !important;
-            width: 100% !important;
-            height: auto !important;
-            inset: auto !important;
           }
 
-          /* O conteúdo real do recibo */
-          #receipt-printable-content {
-            display: flex !important;
-            flex-direction: column !important;
-            position: relative !important;
-            margin: 0 auto !important;
-            border: none !important;
-            box-shadow: none !important;
+          /* Ocupa apenas o espaço necessário para o recibo no topo */
+          #receipt-to-print {
+            display: block !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
             width: 100% !important;
-            max-width: 320px !important; /* Ajuste comum para impressoras térmicas */
-            padding: 10px !important;
+            max-width: 320px !important; /* Tamanho padrão de impressora térmica */
+            border: 2px solid black !important;
+            padding: 15px !important;
+            margin: 0 !important;
+            background: white !important;
+            color: black !important;
+            visibility: visible !important;
           }
 
-          /* Esconde botões dentro do modal de impressão */
-          .fixed.inset-0.bg-black\/95 button {
-            display: none !important;
+          /* Força as fontes a serem pretas mesmo que o sistema esteja em modo escuro */
+          #receipt-to-print * {
+            color: black !important;
+            visibility: visible !important;
           }
 
           @page {
