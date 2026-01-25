@@ -16,9 +16,7 @@ interface OrdersProps {
 
 const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAdd, onAddClient, onUpdateOrder }) => {
   const [showModal, setShowModal] = useState(false);
-  const [printOrderId, setPrintOrderId] = useState<number | null>(null);
   const [filter, setFilter] = useState<Order['status'] | 'Todos'>('Todos');
-  const [isAutoPrinting, setIsAutoPrinting] = useState(false);
   
   const [clientType, setClientType] = useState<'existing' | 'new'>('existing');
   const [selectedClientId, setSelectedClientId] = useState('');
@@ -30,19 +28,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
   const [items, setItems] = useState<Omit<OrderItem, 'id_item' | 'id_pedido'>[]>([
     { descreçao: '', quantidade: '1', valor_unidade: '', total: '0', obicervação: '' }
   ]);
-
-  // Efeito para disparar a impressão após garantir que o DOM está pronto
-  useEffect(() => {
-    if (printOrderId && isAutoPrinting) {
-      // Pequeno timeout para garantir que o modal de impressão e os dados do pedido 
-      // foram injetados no DOM e renderizados pelo React.
-      const timer = setTimeout(() => {
-        window.print();
-        setIsAutoPrinting(false);
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-  }, [printOrderId, isAutoPrinting]);
 
   const filteredOrders = useMemo(() => {
     let list = Array.isArray(orders) ? orders : [];
@@ -66,6 +51,157 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
   const calculateOrderTotal = (id_pedido: number) => {
     const matchedItems = getItemsForOrder(id_pedido);
     return matchedItems.reduce((acc, item) => acc + (parseFloat(item.total) || 0), 0);
+  };
+
+  // --- Lógica de Impressão via Iframe ---
+  const handlePrint = (orderId: number) => {
+    const order = orders.find(o => o.id_pedido === orderId);
+    if (!order) return;
+
+    const itemsInOrder = getItemsForOrder(orderId);
+    const totalVal = calculateOrderTotal(orderId);
+    const clientName = getClientName(order.id_cliente);
+    const orderDate = new Date(order.created_at).toLocaleDateString('pt-BR');
+    const entregaDate = order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR';
+
+    // Construção do HTML do Recibo
+    const receiptHtml = `
+      <html>
+        <head>
+          <title>Recibo #${orderId}</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+            body { 
+              font-family: 'Courier Prime', monospace; 
+              background: white; 
+              color: black; 
+              margin: 0; 
+              padding: 10px;
+              width: 300px;
+            }
+            .dashed-line { border-top: 2px dashed black; margin: 10px 0; }
+            @media print {
+              body { width: 100%; padding: 0; }
+              @page { margin: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <div style="text-align: center; margin-bottom: 15px;">
+            <h2 style="font-size: 18px; font-weight: 900; text-transform: uppercase; margin: 0;">Atelier Edite Borges</h2>
+            <p style="font-size: 10px; font-weight: bold; margin: 2px 0;">SERVIÇOS DE COSTURA E AJUSTES</p>
+          </div>
+
+          <div style="font-size: 12px; line-height: 1.4; text-transform: uppercase;">
+            <div style="display: flex; justify-content: space-between;"><span>Pedido:</span><span>#${orderId}</span></div>
+            <div style="display: flex; justify-content: space-between;"><span>Data:</span><span>${orderDate}</span></div>
+            <div style="display: flex; justify-content: space-between;"><span>Cliente:</span><span>${clientName}</span></div>
+          </div>
+
+          <div class="dashed-line"></div>
+
+          <div style="font-size: 12px;">
+            ${itemsInOrder.map(item => `
+              <div style="margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                  <span>${item.quantidade}x ${item.descreçao}</span>
+                  <span>${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(item.total))}</span>
+                </div>
+                ${item.obicervação ? `<p style="font-size: 10px; font-style: italic; margin: 2px 0 0 10px;">-- ${item.obicervação}</p>` : ''}
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="dashed-line"></div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0;">
+            <span style="font-size: 14px; font-weight: 900; text-transform: uppercase; text-decoration: underline;">Total:</span>
+            <span style="font-size: 20px; font-weight: 900;">${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
+          </div>
+
+          <div style="text-align: center; border: 1px solid black; padding: 5px; margin: 15px 0;">
+            <span style="font-size: 12px; font-weight: 900; text-transform: uppercase;">${order.pago ? 'PAGO' : 'PAGAMENTO PENDENTE'}</span>
+          </div>
+
+          <div class="dashed-line"></div>
+
+          <div style="text-align: center;">
+            <p style="font-size: 10px; font-weight: 900; text-transform: uppercase; margin: 0;">Previsão de Entrega:</p>
+            <p style="font-size: 16px; font-weight: 900; margin: 5px 0;">${entregaDate}</p>
+          </div>
+          
+          <div style="height: 50px;"></div> <!-- Espaço para corte da impressora -->
+        </body>
+      </html>
+    `;
+
+    // Criação do Iframe Oculto
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    iframe.id = 'print-iframe';
+    
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (doc) {
+      doc.open();
+      doc.write(receiptHtml);
+      doc.close();
+
+      // Aguarda o carregamento do conteúdo (incluindo scripts do Tailwind se houver)
+      iframe.onload = () => {
+        setTimeout(() => {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+          
+          // Remove o iframe após a janela de impressão fechar
+          // O timeout curto garante que o comando de print foi processado pelo browser
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+          }, 1000);
+        }, 500); // Tempo para o Tailwind processar as classes no Iframe
+      };
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    let finalClientId = selectedClientId;
+    if (clientType === 'new') {
+      const addedClient = await onAddClient({ nome: newClientNome, numero: newClientNumero.replace(/\D/g, '') });
+      finalClientId = String(addedClient?.id || '');
+    }
+    if (!finalClientId || items.some(i => !i.descreçao || !i.valor_unidade)) {
+      alert("Preencha todos os campos obrigatórios.");
+      return;
+    }
+    
+    const createdOrder = await onAdd({ 
+      id_cliente: finalClientId, 
+      entrega: dataEntrega, 
+      status: 'em concerto', 
+      pago: estaPago 
+    }, items);
+
+    if (createdOrder && createdOrder.id_pedido) {
+      // Dispara a impressão imediatamente após o salvamento via Iframe
+      handlePrint(createdOrder.id_pedido);
+    }
+    
+    setShowModal(false);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setClientType('existing'); setSelectedClientId(''); setNewClientNome(''); setNewClientNumero('');
+    setDataEntrega(''); setEstaPago(false);
+    setItems([{ descreçao: '', quantidade: '1', valor_unidade: '', total: '0', obicervação: '' }]);
   };
 
   const addItemRow = () => {
@@ -94,41 +230,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     return items.reduce((acc, item) => acc + (parseFloat(item.total) || 0), 0);
   }, [items]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    let finalClientId = selectedClientId;
-    if (clientType === 'new') {
-      const addedClient = await onAddClient({ nome: newClientNome, numero: newClientNumero.replace(/\D/g, '') });
-      finalClientId = String(addedClient?.id || '');
-    }
-    if (!finalClientId || items.some(i => !i.descreçao || !i.valor_unidade)) {
-      alert("Preencha todos os campos obrigatórios.");
-      return;
-    }
-    
-    // Aguarda a confirmação do salvamento no Supabase
-    const createdOrder = await onAdd({ 
-      id_cliente: finalClientId, 
-      entrega: dataEntrega, 
-      status: 'em concerto', 
-      pago: estaPago 
-    }, items);
-
-    if (createdOrder && createdOrder.id_pedido) {
-      setPrintOrderId(createdOrder.id_pedido);
-      setIsAutoPrinting(true); // Ativa o gatilho automático de impressão
-    }
-    
-    setShowModal(false);
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setClientType('existing'); setSelectedClientId(''); setNewClientNome(''); setNewClientNumero('');
-    setDataEntrega(''); setEstaPago(false);
-    setItems([{ descreçao: '', quantidade: '1', valor_unidade: '', total: '0', obicervação: '' }]);
-  };
-
   const statusColors = {
     'em concerto': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
     'pronto': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -147,56 +248,9 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     }
   };
 
-  const renderReceiptContent = (id: number) => {
-    const order = orders.find(o => o.id_pedido === id);
-    if (!order) return <div className="p-10 text-center font-bold">Carregando dados da notinha...</div>;
-    const itemsInOrder = getItemsForOrder(id);
-    const totalVal = calculateOrderTotal(id);
-    return (
-      <div id="thermal-receipt" className="receipt-content-wrapper bg-white text-black p-4 font-mono w-full max-w-[300px] mx-auto border-2 border-black">
-        <div className="text-center mb-4 border-b-2 border-dashed border-black pb-2">
-          <h2 className="text-lg font-black uppercase leading-tight">Atelier Edite Borges</h2>
-          <p className="text-[10px] font-bold">SERVIÇOS DE COSTURA E AJUSTES</p>
-        </div>
-        
-        <div className="text-[11px] space-y-1 mb-4 font-bold uppercase">
-          <div className="flex justify-between"><span>Pedido:</span><span>#{order.id_pedido}</span></div>
-          <div className="flex justify-between"><span>Data:</span><span>{new Date(order.created_at).toLocaleDateString('pt-BR')}</span></div>
-          <div className="flex justify-between"><span>Cliente:</span><span>{getClientName(order.id_cliente)}</span></div>
-        </div>
-
-        <div className="border-t-2 border-b-2 border-dashed border-black py-2 mb-4">
-          {itemsInOrder.map((item, idx) => (
-            <div key={idx} className="mb-2 text-[11px]">
-              <div className="flex justify-between font-bold">
-                <span className="uppercase">{item.quantidade}x {item.descreçao}</span>
-                <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(item.total))}</span>
-              </div>
-              {item.obicervação && <p className="text-[9px] italic opacity-80 pl-2">-- {item.obicervação}</p>}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-sm font-black uppercase underline">Total:</span>
-          <span className="text-xl font-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
-        </div>
-
-        <div className="text-center py-1 px-4 border border-black rounded mb-4">
-          <span className="text-xs font-black uppercase">{order.pago ? 'PAGO' : 'PAGAMENTO PENDENTE'}</span>
-        </div>
-
-        <div className="text-center border-t-2 border-dashed border-black pt-2">
-          <p className="text-[10px] font-black uppercase">Entrega:</p>
-          <p className="text-base font-black">{order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR'}</p>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <>
-      <div className="flex flex-col min-h-screen bg-[#fffafb] dark:bg-slate-950 transition-colors pb-24 relative print:hidden">
+      <div className="flex flex-col min-h-screen bg-[#fffafb] dark:bg-slate-950 transition-colors pb-24 relative">
         <div className="absolute top-6 left-6 flex items-center space-x-3">
           <Link to="/" className="w-10 h-10 bg-white dark:bg-slate-800 text-gray-400 dark:text-gray-200 rounded-xl flex items-center justify-center shadow-lg border border-rose-100 dark:border-slate-800 active:scale-90 transition-all">
             <i className="fa-solid fa-chevron-left"></i>
@@ -247,7 +301,9 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                   </div>
                   <div className="flex flex-col items-end space-y-2">
                     <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColors[order.status]}`}>{order.status}</span>
-                    <button onClick={() => setPrintOrderId(order.id_pedido)} className="w-8 h-8 bg-gray-50 dark:bg-slate-800 text-gray-400 rounded-lg flex items-center justify-center shadow-sm"><i className="fa-solid fa-receipt text-xs"></i></button>
+                    <button onClick={() => handlePrint(order.id_pedido)} className="w-8 h-8 bg-gray-50 dark:bg-slate-800 text-gray-400 rounded-lg flex items-center justify-center shadow-sm active:bg-rose-50 active:text-rose-600 transition-colors">
+                      <i className="fa-solid fa-receipt text-xs"></i>
+                    </button>
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-3 border-t border-gray-50 dark:border-slate-800">
@@ -277,7 +333,10 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         {showModal && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-end justify-center px-4 sm:px-0">
             <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar transition-colors">
-              <h2 className="text-xl font-black text-gray-900 dark:text-white text-left">Novo Pedido</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-black text-gray-900 dark:text-white text-left">Novo Pedido</h2>
+                <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-red-500 transition-colors"><i className="fa-solid fa-xmark text-xl"></i></button>
+              </div>
               <form onSubmit={handleSubmit} className="space-y-6 pb-10 text-left">
                 <div className="flex p-1 bg-gray-100 dark:bg-slate-800 rounded-2xl">
                   <button type="button" onClick={() => setClientType('existing')} className={`flex-1 py-3 text-[10px] font-black uppercase rounded-xl transition-all ${clientType === 'existing' ? 'bg-white dark:bg-slate-700 text-rose-600 shadow-sm' : 'text-gray-400'}`}>Existente</button>
@@ -343,83 +402,13 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         )}
       </div>
 
-      {printOrderId && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-6 print:static print:block print:bg-white print:p-0 print:z-auto print:h-auto">
-          <button onClick={() => setPrintOrderId(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center transition-colors print:hidden hover:bg-rose-600">
-            <i className="fa-solid fa-xmark"></i>
-          </button>
-          
-          <div className="mb-8 print:mb-0 print:w-full">
-            {renderReceiptContent(printOrderId)}
-          </div>
-          
-          <button onClick={() => window.print()} className="px-8 py-4 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl flex items-center space-x-2 shadow-xl active:scale-95 transition-all print:hidden">
-            <i className="fa-solid fa-print"></i>
-            <span>Imprimir Recibo</span>
-          </button>
-        </div>
-      )}
-
       <style>{`
         @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .animate-slide-up { animation: slide-up 0.3s ease-out; }
         
         @media print {
-          /* GARANTIAS DE VISIBILIDADE PARA TERMICAS */
-          body, html {
-            background-color: white !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            height: auto !important;
-            width: 100% !important;
-            overflow: visible !important;
-            color: black !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-
-          #root > div:first-child {
-            display: none !important;
-          }
-
-          .fixed.inset-0 {
-            display: block !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            background-color: white !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            z-index: 9999 !important;
-          }
-
-          .receipt-content-wrapper {
-            display: block !important;
-            visibility: visible !important;
-            margin: 0 auto !important;
-            width: 100% !important;
-            max-width: 300px !important;
-            border: 2px solid black !important;
-            background-color: white !important;
-            color: black !important;
-            box-shadow: none !important;
-          }
-
-          .receipt-content-wrapper * {
-            visibility: visible !important;
-            color: black !important;
-            background: none !important;
-          }
-
-          button, i, .print-hidden {
-            display: none !important;
-          }
-
-          @page {
-            margin: 0;
-            size: auto;
-          }
+          /* Garante que o app principal não interfira na impressão do Iframe */
+          #root { display: none !important; }
         }
       `}</style>
     </>
