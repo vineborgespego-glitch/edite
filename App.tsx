@@ -68,7 +68,6 @@ const App: React.FC = () => {
       if (Array.isArray(dataC)) setClients(dataC);
       
       if (Array.isArray(dataI)) {
-        // NORMALIZAÇÃO CRÍTICA: Mapeia as colunas do banco para os nomes internos do objeto
         const normalizedItems = dataI.map((item: any) => ({
           ...item,
           id_pedido: item.id_pedido || item.pedido_id,
@@ -165,13 +164,12 @@ const App: React.FC = () => {
       
       if (!createdOrder || !createdOrder.id_pedido) {
          console.error("Falha ao criar pedido.");
-         return;
+         return null;
       }
 
       const newOrderId = createdOrder.id_pedido;
 
       if (items.length > 0) {
-        // SALVAMENTO: Usa exatamente descreçao e obicervação conforme seu SQL
         const itemsToSave = items.map(item => ({ 
           descreçao: item.descreçao,
           quantidade: item.quantidade,
@@ -199,8 +197,13 @@ const App: React.FC = () => {
           });
         }
       }
-      fetchData();
-    } catch (e) { console.error(e); }
+      // Importante: aguarda a atualização dos dados locais
+      await fetchData();
+      return createdOrder;
+    } catch (e) { 
+      console.error(e); 
+      return null;
+    }
   };
 
   const addClient = async (c: { nome: string; numero: string }) => {

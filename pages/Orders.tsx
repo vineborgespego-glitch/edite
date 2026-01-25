@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { User, Order, Client, OrderItem } from '../types';
 import { Link } from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle';
@@ -9,7 +9,7 @@ interface OrdersProps {
   orders: Order[];
   orderItems: OrderItem[];
   clients: Client[];
-  onAdd: (order: Omit<Order, 'id_pedido' | 'created_at'>, items: Omit<OrderItem, 'id_item' | 'id_pedido'>[]) => void;
+  onAdd: (order: Omit<Order, 'id_pedido' | 'created_at'>, items: Omit<OrderItem, 'id_item' | 'id_pedido'>[]) => Promise<any>;
   onAddClient: (c: { nome: string; numero: string }) => Promise<any>;
   onUpdateOrder: (id: number, updates: Partial<Order>) => void;
 }
@@ -18,6 +18,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
   const [showModal, setShowModal] = useState(false);
   const [printOrderId, setPrintOrderId] = useState<number | null>(null);
   const [filter, setFilter] = useState<Order['status'] | 'Todos'>('Todos');
+  const [isAutoPrinting, setIsAutoPrinting] = useState(false);
   
   const [clientType, setClientType] = useState<'existing' | 'new'>('existing');
   const [selectedClientId, setSelectedClientId] = useState('');
@@ -29,6 +30,19 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
   const [items, setItems] = useState<Omit<OrderItem, 'id_item' | 'id_pedido'>[]>([
     { descreçao: '', quantidade: '1', valor_unidade: '', total: '0', obicervação: '' }
   ]);
+
+  // Efeito para disparar a impressão após garantir que o DOM está pronto
+  useEffect(() => {
+    if (printOrderId && isAutoPrinting) {
+      // Pequeno timeout para garantir que o modal de impressão e os dados do pedido 
+      // foram injetados no DOM e renderizados pelo React.
+      const timer = setTimeout(() => {
+        window.print();
+        setIsAutoPrinting(false);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [printOrderId, isAutoPrinting]);
 
   const filteredOrders = useMemo(() => {
     let list = Array.isArray(orders) ? orders : [];
@@ -91,7 +105,20 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
       alert("Preencha todos os campos obrigatórios.");
       return;
     }
-    onAdd({ id_cliente: finalClientId, entrega: dataEntrega, status: 'em concerto', pago: estaPago }, items);
+    
+    // Aguarda a confirmação do salvamento no Supabase
+    const createdOrder = await onAdd({ 
+      id_cliente: finalClientId, 
+      entrega: dataEntrega, 
+      status: 'em concerto', 
+      pago: estaPago 
+    }, items);
+
+    if (createdOrder && createdOrder.id_pedido) {
+      setPrintOrderId(createdOrder.id_pedido);
+      setIsAutoPrinting(true); // Ativa o gatilho automático de impressão
+    }
+    
     setShowModal(false);
     resetForm();
   };
@@ -122,11 +149,11 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
 
   const renderReceiptContent = (id: number) => {
     const order = orders.find(o => o.id_pedido === id);
-    if (!order) return null;
+    if (!order) return <div className="p-10 text-center font-bold">Carregando dados da notinha...</div>;
     const itemsInOrder = getItemsForOrder(id);
     const totalVal = calculateOrderTotal(id);
     return (
-      <div className="receipt-content-wrapper bg-white text-black p-4 font-mono w-full max-w-[300px] mx-auto border-2 border-black">
+      <div id="thermal-receipt" className="receipt-content-wrapper bg-white text-black p-4 font-mono w-full max-w-[300px] mx-auto border-2 border-black">
         <div className="text-center mb-4 border-b-2 border-dashed border-black pb-2">
           <h2 className="text-lg font-black uppercase leading-tight">Atelier Edite Borges</h2>
           <p className="text-[10px] font-bold">SERVIÇOS DE COSTURA E AJUSTES</p>
@@ -169,9 +196,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
 
   return (
     <>
-      {/* TELA PRINCIPAL DO APP - ESCONDIDA DURANTE IMPRESSÃO */}
       <div className="flex flex-col min-h-screen bg-[#fffafb] dark:bg-slate-950 transition-colors pb-24 relative print:hidden">
-        {/* CABEÇALHO */}
         <div className="absolute top-6 left-6 flex items-center space-x-3">
           <Link to="/" className="w-10 h-10 bg-white dark:bg-slate-800 text-gray-400 dark:text-gray-200 rounded-xl flex items-center justify-center shadow-lg border border-rose-100 dark:border-slate-800 active:scale-90 transition-all">
             <i className="fa-solid fa-chevron-left"></i>
@@ -190,7 +215,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         </div>
 
         <main className="px-6 pt-24 space-y-4">
-          {/* FILTROS */}
           <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-2">
             {['Todos', 'em concerto', 'pronto', 'entregue'].map((f) => (
               <button key={f} onClick={() => setFilter(f as any)} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${filter === f ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-900 text-gray-400 border border-gray-100 dark:border-slate-800'}`}>
@@ -199,7 +223,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
             ))}
           </div>
 
-          {/* LISTAGEM */}
           {filteredOrders.map(order => {
             const orderItemsList = getItemsForOrder(order.id_pedido);
             const orderTotal = calculateOrderTotal(order.id_pedido);
@@ -251,7 +274,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           })}
         </main>
 
-        {/* MODAL NOVO PEDIDO */}
         {showModal && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-end justify-center px-4 sm:px-0">
             <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar transition-colors">
@@ -321,10 +343,11 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         )}
       </div>
 
-      {/* MODAL DE PREVIEW E IMPRESSÃO - FORA DA DIV QUE É ESCONDIDA NA IMPRESSÃO */}
       {printOrderId && (
         <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-6 print:static print:block print:bg-white print:p-0 print:z-auto print:h-auto">
-          <button onClick={() => setPrintOrderId(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center transition-colors print:hidden"><i className="fa-solid fa-xmark"></i></button>
+          <button onClick={() => setPrintOrderId(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center transition-colors print:hidden hover:bg-rose-600">
+            <i className="fa-solid fa-xmark"></i>
+          </button>
           
           <div className="mb-8 print:mb-0 print:w-full">
             {renderReceiptContent(printOrderId)}
@@ -342,7 +365,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
         .animate-slide-up { animation: slide-up 0.3s ease-out; }
         
         @media print {
-          /* RESET GERAL DE IMPRESSÃO */
+          /* GARANTIAS DE VISIBILIDADE PARA TERMICAS */
           body, html {
             background-color: white !important;
             margin: 0 !important;
@@ -351,14 +374,14 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
             width: 100% !important;
             overflow: visible !important;
             color: black !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
 
-          /* ESCONDE O CONTEÚDO DO REACT COMPLETAMENTE */
           #root > div:first-child {
             display: none !important;
           }
 
-          /* FORÇA A EXIBIÇÃO APENAS DO CONTEÚDO DO RECIBO */
           .fixed.inset-0 {
             display: block !important;
             position: absolute !important;
@@ -368,9 +391,9 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
             background-color: white !important;
             padding: 0 !important;
             margin: 0 !important;
+            z-index: 9999 !important;
           }
 
-          /* GARANTE QUE O WRAPPER DO RECIBO ESTEJA VISÍVEL */
           .receipt-content-wrapper {
             display: block !important;
             visibility: visible !important;
@@ -380,6 +403,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
             border: 2px solid black !important;
             background-color: white !important;
             color: black !important;
+            box-shadow: none !important;
           }
 
           .receipt-content-wrapper * {
@@ -388,7 +412,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
             background: none !important;
           }
 
-          /* OCULTA BOTÕES E ELEMENTOS AUXILIARES */
           button, i, .print-hidden {
             display: none !important;
           }
