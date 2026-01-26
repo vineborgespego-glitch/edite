@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { User, Order, Client, OrderItem } from '../types';
+import { User, Order, Client, OrderItem, Transaction } from '../types';
 import { Link } from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle';
 
@@ -9,22 +9,32 @@ interface OrdersProps {
   orders: Order[];
   orderItems: OrderItem[];
   clients: Client[];
-  onAdd: (order: Omit<Order, 'id_pedido' | 'created_at'>, items: Omit<OrderItem, 'id_item' | 'id_pedido'>[]) => Promise<any>;
+  transactions: Transaction[];
+  onAdd: (order: Omit<Order, 'id_pedido' | 'created_at'>, items: Omit<OrderItem, 'id_item' | 'id_pedido'>[], paymentLabel?: string) => Promise<any>;
   onAddClient: (c: { nome: string; numero: string }) => Promise<any>;
-  onUpdateOrder: (id: number, updates: Partial<Order>) => void;
+  onUpdateOrder: (id: number, updates: Partial<Order>, paymentLabel?: string) => void;
 }
 
-const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAdd, onAddClient, onUpdateOrder }) => {
+type PagamentoTipo = 'dinheiro_pix' | 'cartao' | null;
+type CartaoTipo = 'credito' | 'debito' | null;
+
+const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, transactions, onAdd, onAddClient, onUpdateOrder }) => {
   const [showModal, setShowModal] = useState(false);
   const [printOrderId, setPrintOrderId] = useState<number | null>(null);
   const [filter, setFilter] = useState<Order['status'] | 'Todos'>('Todos');
   
+  // States for new order
   const [clientType, setClientType] = useState<'existing' | 'new'>('existing');
   const [selectedClientId, setSelectedClientId] = useState('');
   const [newClientNome, setNewClientNome] = useState('');
   const [newClientNumero, setNewClientNumero] = useState('');
   const [dataEntrega, setDataEntrega] = useState('');
   const [estaPago, setEstaPago] = useState(false);
+  const [pagamentoTipo, setPagamentoTipo] = useState<PagamentoTipo>(null);
+  const [cartaoSubtipo, setCartaoSubtipo] = useState<CartaoTipo>(null);
+
+  // State for updating status to Paid
+  const [pendingPaymentOrderId, setPendingPaymentOrderId] = useState<number | null>(null);
 
   const [items, setItems] = useState<Omit<OrderItem, 'id_item' | 'id_pedido'>[]>([
     { descreçao: '', quantidade: '1', valor_unidade: '', total: '0', obicervação: '' }
@@ -54,7 +64,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     return matchedItems.reduce((acc, item) => acc + (parseFloat(item.total) || 0), 0);
   };
 
-  // --- LÓGICA DE IMPRESSÃO VIA IFRAME (SOLUÇÃO P/ PÁGINA EM BRANCO) ---
+  // --- LÓGICA DE IMPRESSÃO VIA IFRAME (COM FORMA DE PAGAMENTO) ---
   const executeIframePrint = (orderId: number) => {
     const order = orders.find(o => o.id_pedido === orderId);
     if (!order) return;
@@ -65,36 +75,62 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     const orderDate = new Date(order.created_at).toLocaleDateString('pt-BR');
     const entregaDate = order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR';
 
+    // Busca a forma de pagamento nas transações financeiras
+    const getDetailedPaymentMethod = () => {
+      if (!order.pago) return 'PAGAMENTO PENDENTE';
+      const tx = transactions.find(t => t.tipo === 'receita' && t.descricao.includes(`Pedido #${orderId}`));
+      if (tx) {
+        // Tenta extrair o que está entre colchetes [PIX/Dinheiro]
+        const match = tx.descricao.match(/\[(.*?)\]/);
+        return match ? match[1].toUpperCase() : 'PAGO';
+      }
+      return 'PAGO';
+    };
+
+    const paymentInfo = getDetailedPaymentMethod();
+
     const receiptHtml = `
       <html>
         <head>
           <meta charset="utf-8">
           <style>
-            body { font-family: 'Courier New', monospace; width: 280px; margin: 0; padding: 10px; color: #000; }
+            @page { margin: 0; }
+            body { 
+              font-family: 'Courier New', Courier, monospace; 
+              width: 280px; 
+              margin: 0; 
+              padding: 20px 10px 150px 10px;
+              color: #000; 
+              background: #fff;
+              -webkit-print-color-adjust: exact;
+              font-weight: bold;
+            }
             .text-center { text-align: center; }
-            .header { border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
-            .header h2 { margin: 0; font-size: 16px; text-transform: uppercase; }
-            .header p { margin: 2px 0; font-size: 9px; font-weight: bold; }
-            .info { font-size: 11px; text-transform: uppercase; margin-bottom: 10px; }
-            .info div { display: flex; justify-content: space-between; }
-            .dashed { border-top: 1px dashed #000; margin: 8px 0; }
-            .item { font-size: 11px; margin-bottom: 5px; }
-            .item-row { display: flex; justify-content: space-between; font-weight: bold; }
-            .obs { font-size: 9px; font-style: italic; margin-left: 10px; }
-            .total { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; }
-            .total-lbl { font-size: 12px; font-weight: bold; }
-            .total-val { font-size: 18px; font-weight: bold; }
-            .pago-box { border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold; font-size: 11px; margin: 10px 0; }
-            .delivery { text-align: center; }
-            .delivery p { margin: 0; font-size: 9px; font-weight: bold; text-transform: uppercase; }
-            .delivery h3 { margin: 4px 0; font-size: 14px; font-weight: bold; }
-            @media print { body { width: 100%; margin: 0; padding: 0; } }
+            .header { border-bottom: 3px solid #000; padding-bottom: 12px; margin-bottom: 15px; }
+            .header h2 { margin: 0; font-size: 22px; text-transform: uppercase; font-weight: 900; }
+            .header p { margin: 5px 0; font-size: 12px; font-weight: 900; }
+            .info { font-size: 14px; text-transform: uppercase; margin-bottom: 12px; }
+            .info div { display: flex; justify-content: space-between; margin-bottom: 4px; }
+            .dashed { border-top: 2px dashed #000; margin: 12px 0; }
+            .item { font-size: 14px; margin-bottom: 10px; }
+            .item-row { display: flex; justify-content: space-between; font-weight: 900; }
+            .obs { font-size: 12px; font-style: italic; margin-left: 12px; margin-top: 2px; color: #000; }
+            .total { display: flex; justify-content: space-between; align-items: center; margin: 20px 0; border-top: 3px solid #000; padding-top: 12px; }
+            .total-lbl { font-size: 16px; font-weight: 900; }
+            .total-val { font-size: 26px; font-weight: 900; }
+            .pago-box { border: 3px solid #000; padding: 12px; text-align: center; font-weight: 900; font-size: 16px; margin: 20px 0; text-transform: uppercase; }
+            .payment-detail { text-align: center; font-size: 12px; margin-top: -15px; margin-bottom: 15px; }
+            .delivery { text-align: center; border: 2px solid #000; padding: 12px; border-radius: 4px; }
+            .delivery p { margin: 0; font-size: 12px; font-weight: 900; text-transform: uppercase; }
+            .delivery h3 { margin: 8px 0; font-size: 22px; font-weight: 900; }
+            .footer-msg { margin-top: 40px; font-size: 10px; text-transform: uppercase; }
+            .cut-area { height: 180px; }
           </style>
         </head>
-        <body onload="window.print();">
+        <body onload="window.focus(); window.print();">
           <div class="header text-center">
-            <h2>Atelier Edite Borges</h2>
-            <p>SERVIÇOS DE COSTURA E AJUSTES</p>
+            <h2>EDITE BORGES</h2>
+            <p>ATELIER DE COSTURA</p>
           </div>
           <div class="info">
             <div><span>Pedido:</span><span>#${orderId}</span></div>
@@ -102,29 +138,37 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
             <div><span>Cliente:</span><span>${clientName}</span></div>
           </div>
           <div class="dashed"></div>
-          <div>
+          <div class="items-list">
             ${itemsInOrder.map(item => `
               <div class="item">
                 <div class="item-row">
                   <span>${item.quantidade}x ${item.descreçao}</span>
                   <span>${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(item.total))}</span>
                 </div>
-                ${item.obicervação ? `<div class="obs">-- ${item.obicervação}</div>` : ''}
+                ${item.obicervação ? `<div class="obs">>> ${item.obicervação}</div>` : ''}
               </div>
             `).join('')}
           </div>
-          <div class="dashed"></div>
           <div class="total">
             <span class="total-lbl">TOTAL:</span>
             <span class="total-val">${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
           </div>
-          <div class="pago-box">${order.pago ? 'PAGO' : 'PAGAMENTO PENDENTE'}</div>
-          <div class="dashed"></div>
+          
+          <div class="pago-box">
+            ${order.pago ? '*** PAGO ***' : '!!! PENDENTE !!!'}
+          </div>
+          ${order.pago ? `<div class="payment-detail">FORMA: ${paymentInfo}</div>` : ''}
+          
           <div class="delivery">
-            <p>Entrega Prevista:</p>
+            <p>Previsão de Retirada:</p>
             <h3>${entregaDate}</h3>
           </div>
-          <div style="height: 30px;"></div>
+          <div class="footer-msg text-center">
+            Obrigado pela preferência!<br>
+            Deus abençoe seu dia.
+          </div>
+          <div class="cut-area"></div>
+          <div class="text-center">.</div>
         </body>
       </html>
     `;
@@ -143,14 +187,14 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
       doc.open();
       doc.write(receiptHtml);
       doc.close();
-      
-      // Remove o iframe após a janela de impressão fechar ou após um tempo seguro
-      setTimeout(() => {
-        if (document.body.contains(iframe)) {
-          document.body.removeChild(iframe);
-        }
-      }, 5000);
+      setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 10000);
     }
+  };
+
+  const getPaymentLabel = (tipo: PagamentoTipo, subtipo: CartaoTipo) => {
+    if (tipo === 'dinheiro_pix') return '[PIX/Dinheiro]';
+    if (tipo === 'cartao') return `[Cartão ${subtipo === 'credito' ? 'Crédito' : 'Débito'}]`;
+    return '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -164,13 +208,18 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
       alert("Preencha todos os campos obrigatórios.");
       return;
     }
+
+    if (estaPago && !pagamentoTipo) {
+      alert("Selecione a forma de pagamento!");
+      return;
+    }
     
     const createdOrder = await onAdd({ 
       id_cliente: finalClientId, 
       entrega: dataEntrega, 
       status: 'em concerto', 
       pago: estaPago 
-    }, items);
+    }, items, estaPago ? getPaymentLabel(pagamentoTipo, cartaoSubtipo) : undefined);
 
     if (createdOrder && createdOrder.id_pedido) {
       setPrintOrderId(createdOrder.id_pedido);
@@ -180,9 +229,20 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     resetForm();
   };
 
+  const handleUpdateToPaid = (orderId: number) => {
+    if (!pagamentoTipo) {
+      alert("Selecione a forma de pagamento!");
+      return;
+    }
+    onUpdateOrder(orderId, { pago: true }, getPaymentLabel(pagamentoTipo, cartaoSubtipo));
+    setPendingPaymentOrderId(null);
+    setPagamentoTipo(null);
+    setCartaoSubtipo(null);
+  };
+
   const resetForm = () => {
     setClientType('existing'); setSelectedClientId(''); setNewClientNome(''); setNewClientNumero('');
-    setDataEntrega(''); setEstaPago(false);
+    setDataEntrega(''); setEstaPago(false); setPagamentoTipo(null); setCartaoSubtipo(null);
     setItems([{ descreçao: '', quantidade: '1', valor_unidade: '', total: '0', obicervação: '' }]);
   };
 
@@ -261,9 +321,16 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                   <p className="text-sm font-black text-rose-600">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateOrderTotal(order.id_pedido))}</p>
                 </div>
                 <div className="flex space-x-2">
-                  <button onClick={() => onUpdateOrder(order.id_pedido, { pago: !order.pago })} className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${order.pago ? 'bg-green-50 text-green-600 border-green-200' : 'bg-rose-50 text-rose-600 border-rose-200'}`}>
-                    {order.pago ? 'Pago' : 'Pendente'}
-                  </button>
+                  {order.pago ? (
+                    <span className="px-3 py-2 bg-green-50 text-green-600 border border-green-200 rounded-xl text-[9px] font-black uppercase tracking-widest">Pago</span>
+                  ) : (
+                    <button 
+                      onClick={() => { setPagamentoTipo(null); setCartaoSubtipo(null); setPendingPaymentOrderId(order.id_pedido); }} 
+                      className="px-3 py-2 bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-[9px] font-black uppercase tracking-widest"
+                    >
+                      Pendente
+                    </button>
+                  )}
                   {order.status !== 'entregue' && (
                     <button onClick={() => onUpdateOrder(order.id_pedido, { status: order.status === 'em concerto' ? 'pronto' : 'entregue' })} className="px-3 py-2 bg-rose-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest">
                       {order.status === 'em concerto' ? 'Pronto' : 'Entregar'}
@@ -277,10 +344,10 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
 
         {showModal && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-end justify-center px-4 sm:px-0">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar transition-colors">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-black text-gray-900 dark:text-white">Novo Pedido</h2>
-                <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-red-500 transition-colors"><i className="fa-solid fa-xmark text-xl"></i></button>
+                <button onClick={() => setShowModal(false)} className="text-gray-400"><i className="fa-solid fa-xmark text-xl"></i></button>
               </div>
               <form onSubmit={handleSubmit} className="space-y-6 pb-10">
                 <div className="flex p-1 bg-gray-100 dark:bg-slate-800 rounded-2xl">
@@ -315,10 +382,36 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                     </div>
                   ))}
                 </div>
-                <div className="flex items-center justify-between bg-gray-50 dark:bg-slate-800 p-5 rounded-3xl">
-                  <span className="text-[10px] font-black uppercase text-gray-500">Já está pago?</span>
-                  <button type="button" onClick={() => setEstaPago(!estaPago)} className={`w-12 h-6 rounded-full relative transition-all ${estaPago ? 'bg-green-500' : 'bg-gray-300'}`}><div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${estaPago ? 'left-7' : 'left-1'}`}></div></button>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between bg-gray-50 dark:bg-slate-800 p-5 rounded-3xl">
+                    <span className="text-[10px] font-black uppercase text-gray-500">Já está pago?</span>
+                    <button type="button" onClick={() => { setEstaPago(!estaPago); if(estaPago) { setPagamentoTipo(null); setCartaoSubtipo(null); } }} className={`w-12 h-6 rounded-full relative transition-all ${estaPago ? 'bg-green-500' : 'bg-gray-300'}`}><div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${estaPago ? 'left-7' : 'left-1'}`}></div></button>
+                  </div>
+
+                  {estaPago && (
+                    <div className="space-y-4 animate-slide-in">
+                      <div className="grid grid-cols-2 gap-3">
+                        <button type="button" onClick={() => { setPagamentoTipo('dinheiro_pix'); setCartaoSubtipo(null); }} className={`flex items-center justify-center space-x-2 p-4 rounded-2xl border transition-all ${pagamentoTipo === 'dinheiro_pix' ? 'bg-green-500 border-green-500 text-white' : 'bg-gray-50 dark:bg-slate-800 border-gray-100 text-gray-600 dark:text-gray-400'}`}>
+                          <i className="fa-solid fa-sack-dollar text-xs"></i>
+                          <span className="font-bold text-[10px] uppercase">PIX/Dinheiro</span>
+                        </button>
+                        <button type="button" onClick={() => setPagamentoTipo('cartao')} className={`flex items-center justify-center space-x-2 p-4 rounded-2xl border transition-all ${pagamentoTipo === 'cartao' ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-gray-50 dark:bg-slate-800 border-gray-100 text-gray-600 dark:text-gray-400'}`}>
+                          <i className="fa-solid fa-credit-card text-xs"></i>
+                          <span className="font-bold text-[10px] uppercase">Cartão</span>
+                        </button>
+                      </div>
+
+                      {pagamentoTipo === 'cartao' && (
+                        <div className="grid grid-cols-2 gap-3 animate-slide-in">
+                          <button type="button" onClick={() => setCartaoSubtipo('credito')} className={`p-3 rounded-xl border text-[9px] font-black uppercase transition-all ${cartaoSubtipo === 'credito' ? 'bg-indigo-100 dark:bg-indigo-900/50 border-indigo-300 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-slate-700 text-gray-500'}`}>Crédito</button>
+                          <button type="button" onClick={() => setCartaoSubtipo('debito')} className={`p-3 rounded-xl border text-[9px] font-black uppercase transition-all ${cartaoSubtipo === 'debito' ? 'bg-indigo-100 dark:bg-indigo-900/50 border-indigo-300 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-slate-700 text-gray-500'}`}>Débito</button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
+
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   <div className="w-full text-left">
                     <label className="block text-[9px] font-black uppercase text-gray-400 mb-1 ml-1">Previsão Entrega</label>
@@ -335,7 +428,50 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           </div>
         )}
 
-        {/* --- OVERLAY DE PRÉ-VISUALIZAÇÃO (O QUE O USUÁRIO CHAMOU DE "NÃO ABRE") --- */}
+        {/* --- MODAL DE CONFIRMAÇÃO DE PAGAMENTO (PEDIDO EXISTENTE) --- */}
+        {pendingPaymentOrderId && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[90] flex items-center justify-center p-6">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2.5rem] p-8 space-y-6 shadow-2xl animate-slide-up text-center">
+              <div>
+                <h3 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tighter">Confirmar Pagamento</h3>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Pedido #{pendingPaymentOrderId}</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <button type="button" onClick={() => { setPagamentoTipo('dinheiro_pix'); setCartaoSubtipo(null); }} className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${pagamentoTipo === 'dinheiro_pix' ? 'bg-green-500 border-green-500 text-white' : 'bg-gray-50 dark:bg-slate-800 border-gray-100 dark:border-slate-700 text-gray-600'}`}>
+                    <i className="fa-solid fa-sack-dollar mb-2"></i>
+                    <span className="font-black text-[9px] uppercase">PIX/Dinheiro</span>
+                  </button>
+                  <button type="button" onClick={() => setPagamentoTipo('cartao')} className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${pagamentoTipo === 'cartao' ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-gray-50 dark:bg-slate-800 border-gray-100 dark:border-slate-700 text-gray-600'}`}>
+                    <i className="fa-solid fa-credit-card mb-2"></i>
+                    <span className="font-black text-[9px] uppercase tracking-tighter">Cartão</span>
+                  </button>
+                </div>
+
+                {pagamentoTipo === 'cartao' && (
+                  <div className="grid grid-cols-2 gap-3 animate-slide-in">
+                    <button type="button" onClick={() => setCartaoSubtipo('credito')} className={`p-3 rounded-xl border text-[9px] font-black uppercase transition-all ${cartaoSubtipo === 'credito' ? 'bg-indigo-100 dark:bg-indigo-900/50 border-indigo-300 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-slate-700 text-gray-500'}`}>Crédito</button>
+                    <button type="button" onClick={() => setCartaoSubtipo('debito')} className={`p-3 rounded-xl border text-[9px] font-black uppercase transition-all ${cartaoSubtipo === 'debito' ? 'bg-indigo-100 dark:bg-indigo-900/50 border-indigo-300 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-slate-700 text-gray-500'}`}>Débito</button>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col space-y-2">
+                <button 
+                  onClick={() => handleUpdateToPaid(pendingPaymentOrderId)}
+                  disabled={!pagamentoTipo || (pagamentoTipo === 'cartao' && !cartaoSubtipo)}
+                  className="w-full py-4 bg-green-600 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl shadow-lg active:scale-95 transition-all disabled:opacity-30"
+                >
+                  Confirmar e Receber
+                </button>
+                <button onClick={() => setPendingPaymentOrderId(null)} className="py-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- OVERLAY DE PRÉ-VISUALIZAÇÃO --- */}
         {printOrderId && (
           <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-6 transition-all animate-fade-in">
             <button onClick={() => setPrintOrderId(null)} className="absolute top-6 right-6 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-rose-600 transition-colors">
@@ -344,8 +480,8 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
             
             <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-[320px] mb-8 overflow-hidden font-mono text-black scale-100 sm:scale-110">
               <div className="text-center border-b border-dashed border-gray-300 pb-4 mb-4">
-                <h2 className="text-lg font-black uppercase leading-tight">Atelier Edite Borges</h2>
-                <p className="text-[10px] font-bold uppercase">Serviços de Costura</p>
+                <h2 className="text-lg font-black uppercase leading-tight">Edite Borges</h2>
+                <p className="text-[10px] font-bold uppercase">Atelier de Costura</p>
               </div>
               <div className="text-[11px] space-y-1 uppercase mb-4">
                 <div className="flex justify-between"><span>Pedido:</span><span>#{printOrderId}</span></div>
@@ -367,15 +503,28 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
                 <span className="text-xl font-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateOrderTotal(printOrderId))}</span>
               </div>
               <div className="text-center py-1 border border-black rounded text-[10px] font-black uppercase">
-                {orders.find(o => o.id_pedido === printOrderId)?.pago ? 'PAGO' : 'PAGAMENTO PENDENTE'}
+                {orders.find(o => o.id_pedido === printOrderId)?.pago ? '*** PAGO ***' : '!!! PENDENTE !!!'}
               </div>
+              {/* FORMA DE PAGAMENTO MOSTRADA NA TELA DE PREVIEW TAMBÉM */}
+              {orders.find(o => o.id_pedido === printOrderId)?.pago && (
+                 <div className="text-center text-[9px] font-black uppercase mt-1 opacity-60">
+                   FORMA: {(() => {
+                     const tx = transactions.find(t => t.tipo === 'receita' && t.descricao.includes(`Pedido #${printOrderId}`));
+                     if (tx) {
+                       const match = tx.descricao.match(/\[(.*?)\]/);
+                       return match ? match[1].toUpperCase() : 'PAGO';
+                     }
+                     return 'PAGO';
+                   })()}
+                 </div>
+              )}
             </div>
 
             <button onClick={() => executeIframePrint(printOrderId)} className="px-10 py-5 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl shadow-2xl flex items-center space-x-3 active:scale-95 transition-all">
               <i className="fa-solid fa-print"></i>
-              <span>Imprimir Agora</span>
+              <span>Imprimir Recibo</span>
             </button>
-            <p className="text-[10px] text-gray-400 font-bold uppercase mt-4 tracking-widest opacity-60">Visualização de Impressão Térmica</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase mt-4 tracking-widest opacity-60">Pré-visualização da Via do Cliente</p>
           </div>
         )}
       </div>
@@ -383,8 +532,10 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
       <style>{`
         @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slide-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
         .animate-slide-up { animation: slide-up 0.3s ease-out; }
         .animate-fade-in { animation: fade-in 0.2s ease-out; }
+        .animate-slide-in { animation: slide-in 0.2s ease-out; }
       `}</style>
     </>
   );

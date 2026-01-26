@@ -116,7 +116,7 @@ const App: React.FC = () => {
     } catch (e) { console.error(e); }
   };
 
-  const updateOrder = async (id: number, updates: Partial<Order>) => {
+  const updateOrder = async (id: number, updates: Partial<Order>, paymentLabel?: string) => {
     try {
       const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' };
       
@@ -131,7 +131,7 @@ const App: React.FC = () => {
           if (totalOrder > 0) {
             await addTransaction({
               user_id: user.id,
-              descricao: orderIdentifier,
+              descricao: `${orderIdentifier} ${paymentLabel || ''}`,
               valor: totalOrder,
               categoria: 'Serviços',
               data: new Date().toISOString(),
@@ -150,7 +150,7 @@ const App: React.FC = () => {
     } catch (e) { console.error(e); }
   };
 
-  const addOrderWithItems = async (orderData: Omit<Order, 'id_pedido' | 'created_at'>, items: Omit<OrderItem, 'id_item' | 'id_pedido'>[]) => {
+  const addOrderWithItems = async (orderData: Omit<Order, 'id_pedido' | 'created_at'>, items: Omit<OrderItem, 'id_item' | 'id_pedido'>[], paymentLabel?: string) => {
     try {
       const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
       const resOrder = await fetch(`${SUPABASE_URL}/pedidos`, {
@@ -189,7 +189,7 @@ const App: React.FC = () => {
           const totalOrder = items.reduce((acc, i) => acc + (parseFloat(i.total) || 0), 0);
           await addTransaction({ 
             user_id: user.id, 
-            descricao: `Pagamento Pedido #${newOrderId}`, 
+            descricao: `Pagamento Pedido #${newOrderId} ${paymentLabel || ''}`, 
             valor: totalOrder, 
             categoria: 'Serviços', 
             data: new Date().toISOString(), 
@@ -197,7 +197,6 @@ const App: React.FC = () => {
           });
         }
       }
-      // Importante: aguarda a atualização dos dados locais
       await fetchData();
       return createdOrder;
     } catch (e) { 
@@ -235,7 +234,7 @@ const App: React.FC = () => {
           <Route path="/financeiro" element={user ? <Dashboard user={user} transactions={transactions} onLogout={handleLogout} /> : <Navigate to="/login" />} />
           <Route path="/receitas" element={user ? <Receitas user={user} transactions={transactions} onAdd={addTransaction} onDelete={() => {}} /> : <Navigate to="/login" />} />
           <Route path="/despesas" element={user ? <Despesas user={user} transactions={transactions} onAdd={addTransaction} onDelete={() => {}} /> : <Navigate to="/login" />} />
-          <Route path="/pedidos" element={user ? <Orders user={user} orders={orders} orderItems={orderItems} clients={clients} onAdd={addOrderWithItems} onAddClient={addClient} onUpdateOrder={updateOrder} /> : <Navigate to="/login" />} />
+          <Route path="/pedidos" element={user ? <Orders user={user} orders={orders} orderItems={orderItems} clients={clients} transactions={transactions} onAdd={addOrderWithItems} onAddClient={addClient} onUpdateOrder={updateOrder} /> : <Navigate to="/login" />} />
           <Route path="/clientes" element={user ? <Clients user={user} clients={clients} onAdd={addClient} onDelete={() => {}} /> : <Navigate to="/login" />} />
           <Route path="/usuarios" element={user && user.role ? <Usuarios users={allUsers} onDelete={() => fetchData()} /> : <Navigate to="/" />} />
           <Route path="*" element={<Navigate to="/" />} />
