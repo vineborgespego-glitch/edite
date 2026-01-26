@@ -53,7 +53,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     return matchedItems.reduce((acc, item) => acc + (parseFloat(item.total) || 0), 0);
   };
 
-  // --- Lógica de Impressão via Iframe ---
+  // --- NOVA LÓGICA DE IMPRESSÃO INFALÍVEL ---
   const handlePrint = (orderId: number) => {
     const order = orders.find(o => o.id_pedido === orderId);
     if (!order) return;
@@ -64,23 +64,34 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     const orderDate = new Date(order.created_at).toLocaleDateString('pt-BR');
     const entregaDate = order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR';
 
-    // Construção do HTML do Recibo
+    // CSS Puro para evitar dependência do Tailwind no Iframe
     const receiptHtml = `
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>Recibo #${orderId}</title>
-          <script src="https://cdn.tailwindcss.com"></script>
+          <meta charset="utf-8">
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
             body { 
-              font-family: 'Courier Prime', monospace; 
-              background: white; 
-              color: black; 
-              margin: 0; 
-              padding: 10px;
-              width: 300px;
+              font-family: 'Courier New', Courier, monospace; 
+              width: 300px; margin: 0; padding: 10px; color: #000; background: #fff;
             }
-            .dashed-line { border-top: 2px dashed black; margin: 10px 0; }
+            .header { text-align: center; margin-bottom: 15px; border-bottom: 1px dashed #000; padding-bottom: 10px; }
+            .header h2 { margin: 0; font-size: 18px; text-transform: uppercase; }
+            .header p { margin: 2px 0; font-size: 10px; font-weight: bold; }
+            .info { font-size: 12px; margin-bottom: 10px; text-transform: uppercase; }
+            .info div { display: flex; justify-content: space-between; margin-bottom: 2px; }
+            .dashed { border-top: 1px dashed #000; margin: 10px 0; }
+            .items { font-size: 12px; }
+            .item { margin-bottom: 8px; }
+            .item-main { display: flex; justify-content: space-between; font-weight: bold; }
+            .item-obs { font-size: 10px; font-style: italic; margin-left: 10px; margin-top: 2px; }
+            .total-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+            .total-label { font-size: 14px; font-weight: bold; text-decoration: underline; }
+            .total-value { font-size: 20px; font-weight: bold; }
+            .status-box { text-align: center; border: 1px solid #000; padding: 5px; margin: 15px 0; font-weight: bold; font-size: 12px; }
+            .delivery { text-align: center; }
+            .delivery-label { font-size: 10px; font-weight: bold; text-transform: uppercase; margin: 0; }
+            .delivery-date { font-size: 16px; font-weight: bold; margin: 5px 0; }
             @media print {
               body { width: 100%; padding: 0; }
               @page { margin: 0; }
@@ -88,84 +99,90 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
           </style>
         </head>
         <body>
-          <div style="text-align: center; margin-bottom: 15px;">
-            <h2 style="font-size: 18px; font-weight: 900; text-transform: uppercase; margin: 0;">Atelier Edite Borges</h2>
-            <p style="font-size: 10px; font-weight: bold; margin: 2px 0;">SERVIÇOS DE COSTURA E AJUSTES</p>
+          <div class="header">
+            <h2>Atelier Edite Borges</h2>
+            <p>SERVIÇOS DE COSTURA E AJUSTES</p>
           </div>
 
-          <div style="font-size: 12px; line-height: 1.4; text-transform: uppercase;">
-            <div style="display: flex; justify-content: space-between;"><span>Pedido:</span><span>#${orderId}</span></div>
-            <div style="display: flex; justify-content: space-between;"><span>Data:</span><span>${orderDate}</span></div>
-            <div style="display: flex; justify-content: space-between;"><span>Cliente:</span><span>${clientName}</span></div>
+          <div class="info">
+            <div><span>Pedido:</span><span>#${orderId}</span></div>
+            <div><span>Data:</span><span>${orderDate}</span></div>
+            <div><span>Cliente:</span><span>${clientName}</span></div>
           </div>
 
-          <div class="dashed-line"></div>
+          <div class="dashed"></div>
 
-          <div style="font-size: 12px;">
+          <div class="items">
             ${itemsInOrder.map(item => `
-              <div style="margin-bottom: 8px;">
-                <div style="display: flex; justify-content: space-between; font-weight: bold;">
+              <div class="item">
+                <div class="item-main">
                   <span>${item.quantidade}x ${item.descreçao}</span>
                   <span>${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(item.total))}</span>
                 </div>
-                ${item.obicervação ? `<p style="font-size: 10px; font-style: italic; margin: 2px 0 0 10px;">-- ${item.obicervação}</p>` : ''}
+                ${item.obicervação ? `<div class="item-obs">-- ${item.obicervação}</div>` : ''}
               </div>
             `).join('')}
           </div>
 
-          <div class="dashed-line"></div>
+          <div class="dashed"></div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0;">
-            <span style="font-size: 14px; font-weight: 900; text-transform: uppercase; text-decoration: underline;">Total:</span>
-            <span style="font-size: 20px; font-weight: 900;">${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
+          <div class="total-row">
+            <span class="total-label">TOTAL:</span>
+            <span class="total-value">${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal)}</span>
           </div>
 
-          <div style="text-align: center; border: 1px solid black; padding: 5px; margin: 15px 0;">
-            <span style="font-size: 12px; font-weight: 900; text-transform: uppercase;">${order.pago ? 'PAGO' : 'PAGAMENTO PENDENTE'}</span>
+          <div class="status-box">
+            ${order.pago ? 'PAGO' : 'PAGAMENTO PENDENTE'}
           </div>
 
-          <div class="dashed-line"></div>
+          <div class="dashed"></div>
 
-          <div style="text-align: center;">
-            <p style="font-size: 10px; font-weight: 900; text-transform: uppercase; margin: 0;">Previsão de Entrega:</p>
-            <p style="font-size: 16px; font-weight: 900; margin: 5px 0;">${entregaDate}</p>
+          <div class="delivery">
+            <p class="delivery-label">Previsão de Entrega:</p>
+            <p class="delivery-date">${entregaDate}</p>
           </div>
           
-          <div style="height: 50px;"></div> <!-- Espaço para corte da impressora -->
+          <div style="height: 40px;"></div>
         </body>
       </html>
     `;
 
-    // Criação do Iframe Oculto
+    // 1. Cria o Iframe
     const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0px';
+    iframe.style.height = '0px';
     iframe.style.border = 'none';
-    iframe.id = 'print-iframe';
-    
+    iframe.style.visibility = 'hidden';
     document.body.appendChild(iframe);
 
+    // 2. Injeta o conteúdo
     const doc = iframe.contentWindow?.document || iframe.contentDocument;
     if (doc) {
       doc.open();
       doc.write(receiptHtml);
       doc.close();
 
-      // Aguarda o carregamento do conteúdo (incluindo scripts do Tailwind se houver)
+      // 3. Aguarda o carregamento do Iframe e dispara a impressão
       iframe.onload = () => {
         setTimeout(() => {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-          
-          // Remove o iframe após a janela de impressão fechar
-          // O timeout curto garante que o comando de print foi processado pelo browser
-          setTimeout(() => {
-            document.body.removeChild(iframe);
-          }, 1000);
-        }, 500); // Tempo para o Tailwind processar as classes no Iframe
+          if (iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            
+            // 4. Garante a remoção após o fechamento da janela de impressão
+            iframe.contentWindow.onafterprint = () => {
+              document.body.removeChild(iframe);
+            };
+            
+            // Fallback para navegadores que não suportam onafterprint bem
+            setTimeout(() => {
+              if (document.body.contains(iframe)) {
+                // Não removemos imediatamente para dar tempo ao spooler
+              }
+            }, 5000);
+          }
+        }, 300); // Pequeno fôlego para o renderizador
       };
     }
   };
@@ -190,8 +207,10 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
     }, items);
 
     if (createdOrder && createdOrder.id_pedido) {
-      // Dispara a impressão imediatamente após o salvamento via Iframe
-      handlePrint(createdOrder.id_pedido);
+      // Pequeno atraso para garantir que o array de orders foi atualizado localmente pelo fetchData do App.tsx
+      setTimeout(() => {
+        handlePrint(createdOrder.id_pedido);
+      }, 500);
     }
     
     setShowModal(false);
@@ -405,11 +424,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, onAd
       <style>{`
         @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .animate-slide-up { animation: slide-up 0.3s ease-out; }
-        
-        @media print {
-          /* Garante que o app principal não interfira na impressão do Iframe */
-          #root { display: none !important; }
-        }
       `}</style>
     </>
   );
