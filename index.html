@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -45,12 +45,14 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="logo.jpeg">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
-    <meta name="theme-color" content="#e11d48">
+    
+    <!-- Esta tag controla a cor daquela barra que você circulou em verde -->
+    <meta name="theme-color" id="theme-meta" content="#0f172a">
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
         :root {
-          /* Suporte a Notch e Barras de Sistema */
           --sat: env(safe-area-inset-top);
           --sar: env(safe-area-inset-right);
           --sab: env(safe-area-inset-bottom);
@@ -62,7 +64,6 @@
           transition: background-color 0.3s ease, color 0.3s ease;
           margin: 0;
           background-color: #fffafb;
-          /* Evita o scroll "elástico" que quebra a sensação de app */
           overscroll-behavior-y: contain;
           height: 100vh;
           width: 100vw;
@@ -74,7 +75,6 @@
           width: 100%;
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
-          /* Ajuste de padding para não bater no Notch */
           padding-top: var(--sat);
           padding-bottom: var(--sab);
         }
@@ -83,15 +83,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Ajuste de margens fixas para respeitar safe areas */
-        .fixed-bottom-safe {
-          bottom: calc(1rem + var(--sab));
-        }
-        
-        .header-safe {
-          padding-top: calc(1.5rem + var(--sat));
-        }
-
         .logo-shadow { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
     </style>
 <script type="importmap">
@@ -112,11 +103,36 @@
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
     <script>
+        // Script para sincronizar a cor da barra do navegador com o tema
+        const updateThemeColor = () => {
+          const isDark = document.documentElement.classList.contains('dark');
+          const meta = document.getElementById('theme-meta');
+          if (meta) {
+            meta.setAttribute('content', isDark ? '#0f172a' : '#fffafb');
+          }
+        };
+
+        // Observa mudanças de tema
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'class') {
+              updateThemeColor();
+            }
+          });
+        });
+
+        observer.observe(document.documentElement, { attributes: true });
+
+        // Inicialização
         try {
           const savedTheme = localStorage.getItem('ia_finance_theme');
-          if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
               document.documentElement.classList.add('dark');
+          } else {
+              document.documentElement.classList.remove('dark');
           }
+          updateThemeColor();
         } catch (e) {}
     </script>
 </body>

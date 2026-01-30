@@ -12,7 +12,7 @@ const ThemeToggle: React.FC = () => {
     
     const themeStr = newMode ? 'dark' : 'light';
     
-    // Aplica no DOM
+    // Aplica no DOM Principal
     if (newMode) {
       document.documentElement.classList.add('dark');
     } else {
@@ -33,6 +33,12 @@ const ThemeToggle: React.FC = () => {
       } catch (e) {
         console.error("Erro ao salvar tema do usuário:", e);
       }
+    }
+
+    // Atualiza o meta tag theme-color manualmente para resposta imediata
+    const meta = document.getElementById('theme-meta');
+    if (meta) {
+      meta.setAttribute('content', newMode ? '#0f172a' : '#fffafb');
     }
   };
 
