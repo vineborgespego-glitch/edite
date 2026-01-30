@@ -5,6 +5,7 @@
   "description": "Gestão de Oficina e Finanças - Atelier de Costura Edite Borges",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#fffafb",
   "theme_color": "#e11d48",
   "icons": [

@@ -75,7 +75,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
     return matchedItems.reduce((acc, item) => acc + (parseFloat(item.total) || 0), 0);
   };
 
-  // --- LÓGICA DE IMPRESSÃO VIA IFRAME (COM FORMA DE PAGAMENTO) ---
   const executeIframePrint = (orderId: number) => {
     const order = orders.find(o => o.id_pedido === orderId);
     if (!order) return;
@@ -279,8 +278,9 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
 
   return (
     <>
-      <div className="flex flex-col min-h-screen bg-[#fffafb] dark:bg-slate-950 transition-colors pb-24 relative">
-        <div className="absolute top-6 left-6 flex items-center space-x-3">
+      <div className="flex flex-col min-h-screen bg-[#fffafb] dark:bg-slate-950 transition-colors pb-24 relative overflow-x-hidden">
+        {/* Ajuste de Posicionamento para o Topo com Notch */}
+        <div className="absolute top-[var(--sat,1.5rem)] left-6 flex items-center space-x-3 pt-4 sm:pt-0">
           <Link to="/" className="w-10 h-10 bg-white dark:bg-slate-800 text-gray-400 dark:text-gray-200 rounded-xl flex items-center justify-center shadow-lg border border-rose-100 dark:border-slate-800 active:scale-90 transition-all">
             <i className="fa-solid fa-chevron-left"></i>
           </Link>
@@ -290,14 +290,14 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
           </div>
         </div>
         
-        <div className="absolute top-6 right-6 flex items-center space-x-3">
+        <div className="absolute top-[var(--sat,1.5rem)] right-6 flex items-center space-x-3 pt-4 sm:pt-0">
           <ThemeToggle />
           <button onClick={() => { resetForm(); setShowModal(true); }} className="w-10 h-10 bg-rose-600 text-white rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-all">
             <i className="fa-solid fa-plus"></i>
           </button>
         </div>
 
-        <main className="px-6 pt-24 space-y-4">
+        <main className="px-6 pt-32 space-y-4">
           <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-2">
             {['Todos', 'em concerto', 'pronto', 'entregue'].map((f) => (
               <button key={f} onClick={() => setFilter(f as any)} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${filter === f ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-900 text-gray-400 border border-gray-100 dark:border-slate-800'}`}>
@@ -361,7 +361,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
 
         {showModal && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-end justify-center px-4 sm:px-0">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar transition-colors">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar transition-colors pb-[var(--sab,1rem)]">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-black text-gray-900 dark:text-white">Novo Pedido</h2>
                 <button onClick={() => setShowModal(false)} className="text-gray-400"><i className="fa-solid fa-xmark text-xl"></i></button>
@@ -445,7 +445,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
           </div>
         )}
 
-        {/* --- MODAL DE CONFIRMAÇÃO DE PAGAMENTO (PEDIDO EXISTENTE) --- */}
+        {/* --- MODAL DE CONFIRMAÇÃO DE PAGAMENTO --- */}
         {pendingPaymentOrderId && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[90] flex items-center justify-center p-6">
             <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2.5rem] p-8 space-y-6 shadow-2xl animate-slide-up text-center">

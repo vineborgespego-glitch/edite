@@ -3,8 +3,15 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Atelier Edite Borges - Gestão</title>
+    
+    <!-- Meta tags para comportamento de App Nativo -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Atelier Edite">
+    <meta name="mobile-web-app-capable" content="yes">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -41,20 +48,50 @@
     <meta name="theme-color" content="#e11d48">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+          /* Suporte a Notch e Barras de Sistema */
+          --sat: env(safe-area-inset-top);
+          --sar: env(safe-area-inset-right);
+          --sab: env(safe-area-inset-bottom);
+          --sal: env(safe-area-inset-left);
+        }
+
         body { 
           font-family: 'Inter', sans-serif; 
           transition: background-color 0.3s ease, color 0.3s ease;
           margin: 0;
           background-color: #fffafb;
+          /* Evita o scroll "elástico" que quebra a sensação de app */
+          overscroll-behavior-y: contain;
+          height: 100vh;
+          width: 100vw;
+          overflow: hidden;
         }
+
+        #root {
+          height: 100%;
+          width: 100%;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          /* Ajuste de padding para não bater no Notch */
+          padding-top: var(--sat);
+          padding-bottom: var(--sab);
+        }
+
         .dark body { background-color: #0f172a; color: #f8fafc; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-        .dark .glass-card { background: rgba(30, 41, 59, 0.95); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        html, body { height: 100%; }
         
-        /* Estilização suave para imagens de logo */
+        /* Ajuste de margens fixas para respeitar safe areas */
+        .fixed-bottom-safe {
+          bottom: calc(1rem + var(--sab));
+        }
+        
+        .header-safe {
+          padding-top: calc(1.5rem + var(--sat));
+        }
+
         .logo-shadow { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
     </style>
 <script type="importmap">
