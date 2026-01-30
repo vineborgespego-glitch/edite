@@ -46,9 +46,20 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
     return list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [orders, filter]);
 
+  const getClientData = (id_cliente: string) => {
+    return clients.find(c => String(c.id) === id_cliente);
+  };
+
   const getClientName = (id_cliente: string) => {
-    const client = clients.find(c => String(c.id) === id_cliente);
+    const client = getClientData(id_cliente);
     return client ? client.nome : 'Cliente Desconhecido';
+  };
+
+  const handleWhatsApp = (id_cliente: string) => {
+    const client = getClientData(id_cliente);
+    if (!client || !client.numero) return;
+    const cleanPhone = client.numero.replace(/\D/g, '');
+    window.open(`https://wa.me/55${cleanPhone}`, '_blank');
   };
 
   const getItemsForOrder = (id_pedido: number) => {
@@ -75,12 +86,10 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
     const orderDate = new Date(order.created_at).toLocaleDateString('pt-BR');
     const entregaDate = order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR';
 
-    // Busca a forma de pagamento nas transações financeiras
     const getDetailedPaymentMethod = () => {
       if (!order.pago) return 'PAGAMENTO PENDENTE';
       const tx = transactions.find(t => t.tipo === 'receita' && t.descricao.includes(`Pedido #${orderId}`));
       if (tx) {
-        // Tenta extrair o que está entre colchetes [PIX/Dinheiro]
         const match = tx.descricao.match(/\[(.*?)\]/);
         return match ? match[1].toUpperCase() : 'PAGO';
       }
@@ -301,7 +310,15 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
             <div key={order.id_pedido} className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm space-y-4 text-left">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="font-black text-gray-900 dark:text-white truncate">{getClientName(order.id_cliente)}</h3>
+                  <div className="flex items-center space-x-2">
+                    <h3 className="font-black text-gray-900 dark:text-white truncate">{getClientName(order.id_cliente)}</h3>
+                    <button 
+                      onClick={() => handleWhatsApp(order.id_cliente)}
+                      className="w-6 h-6 bg-green-500 text-white rounded-lg flex items-center justify-center active:scale-90 transition-all"
+                    >
+                      <i className="fa-brands fa-whatsapp text-[10px]"></i>
+                    </button>
+                  </div>
                   <div className="mt-2 space-y-1">
                     {getItemsForOrder(order.id_pedido).slice(0, 3).map((item, idx) => (
                       <p key={idx} className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">• {item.descreçao}</p>
@@ -486,7 +503,18 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
               <div className="text-[11px] space-y-1 uppercase mb-4">
                 <div className="flex justify-between"><span>Pedido:</span><span>#{printOrderId}</span></div>
                 <div className="flex justify-between"><span>Data:</span><span>{new Date(orders.find(o => o.id_pedido === printOrderId)?.created_at || '').toLocaleDateString('pt-BR')}</span></div>
-                <div className="flex justify-between"><span>Cliente:</span><span className="truncate ml-2">{getClientName(orders.find(o => o.id_pedido === printOrderId)?.id_cliente || '')}</span></div>
+                <div className="flex justify-between items-center">
+                  <span>Cliente:</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="truncate max-w-[120px]">{getClientName(orders.find(o => o.id_pedido === printOrderId)?.id_cliente || '')}</span>
+                    <button 
+                      onClick={() => handleWhatsApp(orders.find(o => o.id_pedido === printOrderId)?.id_cliente || '')}
+                      className="w-6 h-6 bg-green-500 text-white rounded-lg flex items-center justify-center"
+                    >
+                      <i className="fa-brands fa-whatsapp text-[10px]"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
               <div className="border-y border-dashed border-gray-300 py-3 mb-4 max-h-48 overflow-y-auto">
                 {getItemsForOrder(printOrderId).map((item, i) => (
@@ -505,7 +533,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
               <div className="text-center py-1 border border-black rounded text-[10px] font-black uppercase">
                 {orders.find(o => o.id_pedido === printOrderId)?.pago ? '*** PAGO ***' : '!!! PENDENTE !!!'}
               </div>
-              {/* FORMA DE PAGAMENTO MOSTRADA NA TELA DE PREVIEW TAMBÉM */}
               {orders.find(o => o.id_pedido === printOrderId)?.pago && (
                  <div className="text-center text-[9px] font-black uppercase mt-1 opacity-60">
                    FORMA: {(() => {
