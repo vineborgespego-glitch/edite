@@ -6,10 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Atelier Edite Borges - Gestão</title>
     
-    <!-- Meta tags para comportamento de App Nativo -->
+    <!-- Força o modo App no iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Atelier Edite">
+    
+    <!-- Força o modo App no Android/Chrome -->
     <meta name="mobile-web-app-capable" content="yes">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,23 +21,8 @@
         theme: {
           extend: {
             colors: {
-              primary: {
-                50: '#fff1f2',
-                100: '#ffe4e6',
-                200: '#fecdd3',
-                300: '#fda4af',
-                400: '#fb7185',
-                500: '#f43f5e',
-                600: '#e11d48',
-                700: '#be123c',
-                800: '#9f1239',
-                900: '#881337',
-              },
-              dark: {
-                bg: '#0f172a',
-                card: '#1e293b',
-                border: '#334155'
-              }
+              primary: { 50: '#fff1f2', 100: '#ffe4e6', 200: '#fecdd3', 300: '#fda4af', 400: '#fb7185', 500: '#f43f5e', 600: '#e11d48', 700: '#be123c', 800: '#9f1239', 900: '#881337' },
+              dark: { bg: '#0f172a', card: '#1e293b', border: '#334155' }
             }
           }
         }
@@ -46,7 +33,7 @@
     <link rel="apple-touch-icon" href="logo.jpeg">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
     
-    <!-- Esta tag controla a cor daquela barra que você circulou em verde -->
+    <!-- Cor inicial da barra (Dark Mode conforme seu print) -->
     <meta name="theme-color" id="theme-meta" content="#0f172a">
     
     <style>
@@ -54,17 +41,14 @@
         
         :root {
           --sat: env(safe-area-inset-top);
-          --sar: env(safe-area-inset-right);
           --sab: env(safe-area-inset-bottom);
-          --sal: env(safe-area-inset-left);
         }
 
         body { 
           font-family: 'Inter', sans-serif; 
-          transition: background-color 0.3s ease, color 0.3s ease;
           margin: 0;
           background-color: #fffafb;
-          overscroll-behavior-y: contain;
+          overscroll-behavior-y: contain; /* Bloqueia o 'puxar para atualizar' que mostra a barra */
           height: 100vh;
           width: 100vw;
           overflow: hidden;
@@ -103,27 +87,28 @@
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
     <script>
-        // Script para sincronizar a cor da barra do navegador com o tema
-        const updateThemeColor = () => {
+        // Lógica robusta para pintar a barra do navegador
+        const syncThemeColor = () => {
           const isDark = document.documentElement.classList.contains('dark');
+          const color = isDark ? '#0f172a' : '#fffafb';
+          
+          // Atualiza a tag META que o Chrome lê
           const meta = document.getElementById('theme-meta');
-          if (meta) {
-            meta.setAttribute('content', isDark ? '#0f172a' : '#fffafb');
-          }
+          if (meta) meta.setAttribute('content', color);
+          
+          // Garante que o body também tenha a cor correta para o overscroll
+          document.body.style.backgroundColor = color;
         };
 
-        // Observa mudanças de tema
+        // Monitorar mudanças de tema (clique no sol/lua)
         const observer = new MutationObserver((mutations) => {
           mutations.forEach((mutation) => {
-            if (mutation.attributeName === 'class') {
-              updateThemeColor();
-            }
+            if (mutation.attributeName === 'class') syncThemeColor();
           });
         });
-
         observer.observe(document.documentElement, { attributes: true });
 
-        // Inicialização
+        // Inicialização baseada no que está salvo
         try {
           const savedTheme = localStorage.getItem('ia_finance_theme');
           const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -132,7 +117,7 @@
           } else {
               document.documentElement.classList.remove('dark');
           }
-          updateThemeColor();
+          syncThemeColor();
         } catch (e) {}
     </script>
 </body>

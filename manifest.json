@@ -3,18 +3,23 @@
   "name": "Atelier Edite Borges",
   "short_name": "Atelier Edite",
   "description": "Gestão de Oficina e Finanças - Atelier de Costura Edite Borges",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
-  "orientation": "portrait",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "logo.jpeg",
       "sizes": "192x192",
       "type": "image/jpeg",
       "purpose": "any"
+    },
+    {
+      "src": "logo.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "maskable"
     },
     {
       "src": "logo.jpeg",
