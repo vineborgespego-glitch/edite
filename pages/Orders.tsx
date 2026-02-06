@@ -43,6 +43,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
   const filteredOrders = useMemo(() => {
     let list = Array.isArray(orders) ? orders : [];
     if (filter !== 'Todos') list = list.filter(o => o.status === filter);
+    // FIX: Using 'created_at' instead of 'data' which is not defined on the Order type
     return list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [orders, filter]);
 
@@ -75,6 +76,21 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
     return matchedItems.reduce((acc, item) => acc + (parseFloat(item.total) || 0), 0);
   };
 
+  /**
+   * Função para formatar data ignorando o fuso horário
+   * Evita que datas AAAA-MM-DD apareçam como o dia anterior
+   */
+  const formatSafeDate = (dateStr: string) => {
+    if (!dateStr) return 'A DEFINIR';
+    // Se a data for apenas AAAA-MM-DD (comum em inputs de data)
+    if (dateStr.includes('-') && dateStr.length <= 10) {
+      const [year, month, day] = dateStr.split('-');
+      return `${day}/${month}/${year}`;
+    }
+    // Caso contrário, tenta o formato padrão local
+    return new Date(dateStr).toLocaleDateString('pt-BR');
+  };
+
   const executeIframePrint = (orderId: number) => {
     const order = orders.find(o => o.id_pedido === orderId);
     if (!order) return;
@@ -83,7 +99,9 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
     const totalVal = calculateOrderTotal(orderId);
     const clientName = getClientName(order.id_cliente);
     const orderDate = new Date(order.created_at).toLocaleDateString('pt-BR');
-    const entregaDate = order.entrega ? new Date(order.entrega).toLocaleDateString('pt-BR') : 'A DEFINIR';
+    
+    // Corrigido: Usando formatSafeDate para evitar problema de fuso
+    const entregaDate = formatSafeDate(order.entrega);
 
     const getDetailedPaymentMethod = () => {
       if (!order.pago) return 'PAGAMENTO PENDENTE';
