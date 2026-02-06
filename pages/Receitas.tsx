@@ -19,7 +19,7 @@ const Receitas: React.FC<ReceitasProps> = ({ user, transactions, onAdd, onDelete
   const [showModal, setShowModal] = useState(false);
   const [descricao, setDescricao] = useState('');
   const [valor, setValor] = useState('');
-  const [categoria, setCategoria] = useState('Barra Calça');
+  const [categoria, setCategoria] = useState('');
   const [data, setData] = useState(new Date().toISOString().split('T')[0]);
   
   const location = useLocation();
@@ -42,7 +42,7 @@ const Receitas: React.FC<ReceitasProps> = ({ user, transactions, onAdd, onDelete
   const resetForm = () => {
     setDescricao('');
     setValor('');
-    setCategoria('Barra Calça');
+    setCategoria('');
     setPagamentoTipo(null);
     setCartaoSubtipo(null);
   };
@@ -58,7 +58,7 @@ const Receitas: React.FC<ReceitasProps> = ({ user, transactions, onAdd, onDelete
       user_id: user.id,
       descricao: `${descricao} ${labelPagamento}`,
       valor: parseFloat(valor),
-      categoria,
+      categoria: categoria || 'Geral',
       data: new Date(data).toISOString(),
       tipo: 'receita'
     });
@@ -135,28 +135,24 @@ const Receitas: React.FC<ReceitasProps> = ({ user, transactions, onAdd, onDelete
             <form onSubmit={handleAdd} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1">Descrição do Serviço</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1">Título / Cliente</label>
                   <input
                     required
                     className="w-full p-4 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white rounded-2xl border border-gray-100 dark:border-slate-700 focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                    placeholder="Ex: Conserto vestido Maria"
+                    placeholder="Ex: Maria - Vestido"
                     value={descricao}
                     onChange={e => setDescricao(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1">Tipo de Serviço</label>
-                  <select
-                    className="w-full p-4 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white rounded-2xl border border-gray-100 dark:border-slate-700 focus:ring-2 focus:ring-green-500 outline-none transition-all appearance-none"
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1">Descrição do Serviço</label>
+                  <input
+                    required
+                    className="w-full p-4 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white rounded-2xl border border-gray-100 dark:border-slate-700 focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                    placeholder="Ex: Barra e Ajuste"
                     value={categoria}
                     onChange={e => setCategoria(e.target.value)}
-                  >
-                    <option value="Barra Calça">Barra Calça</option>
-                    <option value="Barra Vestido">Barra Vestido</option>
-                    <option value="Ajuste Cintura">Ajuste Cintura</option>
-                    <option value="Custurinha">Custurinha</option>
-                    <option value="Cós">Cós</option>
-                  </select>
+                  />
                 </div>
               </div>
 
@@ -236,7 +232,7 @@ const Receitas: React.FC<ReceitasProps> = ({ user, transactions, onAdd, onDelete
 
               <button
                 type="submit"
-                disabled={!isValueVisible || !valor || !descricao}
+                disabled={!isValueVisible || !valor || !descricao || !categoria}
                 className="w-full py-5 bg-green-600 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-green-100 dark:shadow-none hover:bg-green-700 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale disabled:scale-100"
               >
                 Finalizar Receita
