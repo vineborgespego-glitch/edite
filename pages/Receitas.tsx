@@ -1,9 +1,11 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { User, Transaction } from '../types';
-// Importação explícita para resolver erro de tipo no ambiente
-import { Link, useLocation } from 'react-router-dom';
+// Fixed: Using namespace import and destructuring to bypass environment type resolution errors for react-router-dom
+import * as ReactRouterDOM from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle';
+
+const { Link, useLocation } = ReactRouterDOM as any;
 
 interface ReceitasProps {
   user: User;

@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
-// Importação explícita para resolver erro de tipo no ambiente
-import { Link, useNavigate } from 'react-router-dom';
+// Fixed: Using namespace import and destructuring to bypass environment type resolution errors for react-router-dom
+import * as ReactRouterDOM from 'react-router-dom';
 import { SUPABASE_URL, SUPABASE_KEY } from '../App';
 import ThemeToggle from '../ThemeToggle';
+
+const { Link, useNavigate } = ReactRouterDOM as any;
 
 interface RegisterProps {
   onRegister: () => void;

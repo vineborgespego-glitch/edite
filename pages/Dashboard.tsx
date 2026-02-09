@@ -2,8 +2,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { User, Transaction } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Link } from 'react-router-dom';
+// Fixed: Using namespace import and destructuring to bypass environment type resolution errors for react-router-dom
+import * as ReactRouterDOM from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle';
+
+const { Link } = ReactRouterDOM as any;
 
 interface DashboardProps {
   user: User;

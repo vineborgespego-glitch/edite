@@ -1,8 +1,11 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+// Fixed: Using namespace import and destructuring to bypass environment type resolution errors for react-router-dom
+import * as ReactRouterDOM from 'react-router-dom';
 import { User } from '../types';
 import ThemeToggle from '../ThemeToggle';
+
+const { Link } = ReactRouterDOM as any;
 
 interface SelectionProps {
   user: User;

@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+// Fixed: Using namespace import and destructuring to bypass environment type resolution errors for react-router-dom
+import * as ReactRouterDOM from 'react-router-dom';
 import { User, Transaction, Order, Client, OrderItem } from './types';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -12,6 +13,9 @@ import Usuarios from './pages/Usuarios';
 import Orders from './pages/Orders';
 import Clients from './pages/Clients';
 import InstallPWA from './components/InstallPWA';
+
+const { HashRouter, Routes, Route, Navigate, Link, useLocation } = ReactRouterDOM as any;
+const Router = HashRouter;
 
 export const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://tzqtbezkqjodzhbptoky.supabase.co/rest/v1';
 export const SUPABASE_KEY = (import.meta as any).env?.VITE_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6cXRiZXprcWpvZHpoYnB0b2t5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NjIxNDEsImV4cCI6MjA4MzUzODE0MX0.G7IJ4BTy-lPmq1cIftZlkLH4rUMHpEMmzSKsy_LCQ6g';

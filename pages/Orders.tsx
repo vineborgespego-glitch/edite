@@ -1,8 +1,11 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { User, Order, Client, OrderItem, Transaction } from '../types';
-import { Link } from 'react-router-dom';
+// Fixed: Using namespace import and destructuring to bypass environment type resolution errors for react-router-dom
+import * as ReactRouterDOM from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle';
+
+const { Link } = ReactRouterDOM as any;
 
 interface OrdersProps {
   user: User;
@@ -43,7 +46,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
   const filteredOrders = useMemo(() => {
     let list = Array.isArray(orders) ? orders : [];
     if (filter !== 'Todos') list = list.filter(o => o.status === filter);
-    // FIX: Using 'created_at' instead of 'data' which is not defined on the Order type
     return list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [orders, filter]);
 
@@ -76,18 +78,12 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
     return matchedItems.reduce((acc, item) => acc + (parseFloat(item.total) || 0), 0);
   };
 
-  /**
-   * Função para formatar data ignorando o fuso horário
-   * Evita que datas AAAA-MM-DD apareçam como o dia anterior
-   */
   const formatSafeDate = (dateStr: string) => {
     if (!dateStr) return 'A DEFINIR';
-    // Se a data for apenas AAAA-MM-DD (comum em inputs de data)
     if (dateStr.includes('-') && dateStr.length <= 10) {
       const [year, month, day] = dateStr.split('-');
       return `${day}/${month}/${year}`;
     }
-    // Caso contrário, tenta o formato padrão local
     return new Date(dateStr).toLocaleDateString('pt-BR');
   };
 
@@ -99,8 +95,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
     const totalVal = calculateOrderTotal(orderId);
     const clientName = getClientName(order.id_cliente);
     const orderDate = new Date(order.created_at).toLocaleDateString('pt-BR');
-    
-    // Corrigido: Usando formatSafeDate para evitar problema de fuso
     const entregaDate = formatSafeDate(order.entrega);
 
     const getDetailedPaymentMethod = () => {
@@ -130,6 +124,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
               background: #fff;
               -webkit-print-color-adjust: exact;
               font-weight: bold;
+              line-height: 1.2;
             }
             .text-center { text-align: center; }
             .header { border-bottom: 3px solid #000; padding-bottom: 12px; margin-bottom: 15px; }
@@ -146,10 +141,18 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
             .total-val { font-size: 26px; font-weight: 900; }
             .pago-box { border: 3px solid #000; padding: 12px; text-align: center; font-weight: 900; font-size: 16px; margin: 20px 0; text-transform: uppercase; }
             .payment-detail { text-align: center; font-size: 12px; margin-top: -15px; margin-bottom: 15px; }
-            .delivery { text-align: center; border: 2px solid #000; padding: 12px; border-radius: 4px; }
+            .delivery { text-align: center; border: 2px solid #000; padding: 12px; border-radius: 4px; margin-bottom: 20px; }
             .delivery p { margin: 0; font-size: 12px; font-weight: 900; text-transform: uppercase; }
             .delivery h3 { margin: 8px 0; font-size: 22px; font-weight: 900; }
-            .footer-msg { margin-top: 40px; font-size: 10px; text-transform: uppercase; }
+            
+            .instructions-section { font-size: 10px; text-align: left; margin-top: 20px; border-top: 1px solid #000; padding-top: 10px; }
+            .instructions-title { font-size: 11px; text-decoration: underline; margin-bottom: 5px; display: block; }
+            .instruction-item { margin-bottom: 4px; display: block; }
+            
+            .contact-section { font-size: 10px; text-align: left; margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px; }
+            .contact-title { font-size: 11px; font-weight: 900; margin-bottom: 5px; display: block; text-transform: uppercase; }
+            
+            .footer-msg { margin-top: 30px; font-size: 10px; text-transform: uppercase; border-top: 1px solid #000; padding-top: 10px; }
             .cut-area { height: 180px; }
           </style>
         </head>
@@ -189,6 +192,23 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
             <p>Previsão de Retirada:</p>
             <h3>${entregaDate}</h3>
           </div>
+
+          <div class="instructions-section">
+            <span class="instructions-title">Instruções</span>
+            <span class="instruction-item">1 - O pagamento pode ser realizado via PIX, em dinheiro ou no cartão à vista.</span>
+            <span class="instruction-item">2 - Caso o pedido não seja retirado em até 3 meses, ele poderá ser vendido, configurando desistência por parte do cliente.</span>
+            <span class="instruction-item">3 - O prazo para reconserto é de 15 dias após a data de entrega.</span>
+            <span class="instruction-item">4 - Em casos onde o cliente trouxer a peça já marcada, não será realizado reconserto.</span>
+          </div>
+
+          <div class="contact-section">
+            <span class="contact-title">Contato e Localização</span>
+            <span>Endereço: Desembargador Otávio do Amaral, 547 - Bigorrilho</span><br>
+            <span>Horário de Funcionamento: Segunda à Sexta: 09:00 - 18:00</span><br>
+            <span style="font-size: 14px; display: block; margin: 5px 0;">(41) 99593-7861 PIX</span>
+            <span>Instagram: @borgesmariaedite</span>
+          </div>
+
           <div class="footer-msg text-center">
             Obrigado pela preferência!<br>
             Deus abençoe seu dia.
@@ -297,7 +317,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
   return (
     <>
       <div className="flex flex-col min-h-screen bg-[#fffafb] dark:bg-slate-950 transition-colors pb-24 relative overflow-x-hidden">
-        {/* Ajuste de Posicionamento para o Topo com Notch */}
         <div className="absolute top-[var(--sat,1.5rem)] left-6 flex items-center space-x-3 pt-4 sm:pt-0">
           <Link to="/" className="w-10 h-10 bg-white dark:bg-slate-800 text-gray-400 dark:text-gray-200 rounded-xl flex items-center justify-center shadow-lg border border-rose-100 dark:border-slate-800 active:scale-90 transition-all">
             <i className="fa-solid fa-chevron-left"></i>
@@ -379,7 +398,7 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
 
         {showModal && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-end justify-center px-4 sm:px-0">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar transition-colors pb-[var(--sab,1rem)]">
+            <div className="bg-white dark:bg-slate-900 w-full max-lg rounded-t-[2.5rem] p-8 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar transition-colors pb-[var(--sab,1rem)]">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-black text-gray-900 dark:text-white">Novo Pedido</h2>
                 <button onClick={() => setShowModal(false)} className="text-gray-400"><i className="fa-solid fa-xmark text-xl"></i></button>
@@ -463,10 +482,9 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
           </div>
         )}
 
-        {/* --- MODAL DE CONFIRMAÇÃO DE PAGAMENTO --- */}
         {pendingPaymentOrderId && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[90] flex items-center justify-center p-6">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2.5rem] p-8 space-y-6 shadow-2xl animate-slide-up text-center">
+            <div className="bg-white dark:bg-slate-900 w-full max-sm:rounded-[2.5rem] p-8 space-y-6 shadow-2xl animate-slide-up text-center rounded-3xl">
               <div>
                 <h3 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tighter">Confirmar Pagamento</h3>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Pedido #{pendingPaymentOrderId}</p>
@@ -506,14 +524,13 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
           </div>
         )}
 
-        {/* --- OVERLAY DE PRÉ-VISUALIZAÇÃO --- */}
         {printOrderId && (
-          <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-6 transition-all animate-fade-in">
-            <button onClick={() => setPrintOrderId(null)} className="absolute top-6 right-6 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-rose-600 transition-colors">
+          <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-6 transition-all animate-fade-in overflow-y-auto">
+            <button onClick={() => setPrintOrderId(null)} className="absolute top-6 right-6 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-rose-600 transition-colors z-[110]">
               <i className="fa-solid fa-xmark text-xl"></i>
             </button>
             
-            <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-[320px] mb-8 overflow-hidden font-mono text-black scale-100 sm:scale-110">
+            <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-[320px] mb-8 font-mono text-black scale-90 sm:scale-100 my-10">
               <div className="text-center border-b border-dashed border-gray-300 pb-4 mb-4">
                 <h2 className="text-lg font-black uppercase leading-tight">Edite Borges</h2>
                 <p className="text-[10px] font-bold uppercase">Atelier de Costura</p>
@@ -525,12 +542,6 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
                   <span>Cliente:</span>
                   <div className="flex items-center space-x-2">
                     <span className="truncate max-w-[120px]">{getClientName(orders.find(o => o.id_pedido === printOrderId)?.id_cliente || '')}</span>
-                    <button 
-                      onClick={() => handleWhatsApp(orders.find(o => o.id_pedido === printOrderId)?.id_cliente || '')}
-                      className="w-6 h-6 bg-green-500 text-white rounded-lg flex items-center justify-center"
-                    >
-                      <i className="fa-brands fa-whatsapp text-[10px]"></i>
-                    </button>
                   </div>
                 </div>
               </div>
@@ -548,28 +559,29 @@ const Orders: React.FC<OrdersProps> = ({ user, orders, orderItems, clients, tran
                 <span className="text-xs font-black uppercase">Total:</span>
                 <span className="text-xl font-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateOrderTotal(printOrderId))}</span>
               </div>
-              <div className="text-center py-1 border border-black rounded text-[10px] font-black uppercase">
+              <div className="text-center py-1 border border-black rounded text-[10px] font-black uppercase mb-4">
                 {orders.find(o => o.id_pedido === printOrderId)?.pago ? '*** PAGO ***' : '!!! PENDENTE !!!'}
               </div>
-              {orders.find(o => o.id_pedido === printOrderId)?.pago && (
-                 <div className="text-center text-[9px] font-black uppercase mt-1 opacity-60">
-                   FORMA: {(() => {
-                     const tx = transactions.find(t => t.tipo === 'receita' && t.descricao.includes(`Pedido #${printOrderId}`));
-                     if (tx) {
-                       const match = tx.descricao.match(/\[(.*?)\]/);
-                       return match ? match[1].toUpperCase() : 'PAGO';
-                     }
-                     return 'PAGO';
-                   })()}
-                 </div>
-              )}
+              
+              <div className="border-t border-black pt-2 text-[9px] text-left space-y-1">
+                <span className="underline font-bold block mb-1">Instruções</span>
+                <p>1 - Pagamento via PIX, dinheiro ou cartão.</p>
+                <p>2 - Após 3 meses sem retirar, o pedido será vendido.</p>
+                <p>3 - Prazo reconserto: 15 dias após entrega.</p>
+                <p>4 - Não reconcertamos peças já marcadas pelo cliente.</p>
+              </div>
+              
+              <div className="mt-3 text-[9px] text-left border-t border-gray-300 pt-2">
+                <p className="font-bold uppercase">Contato e Localização</p>
+                <p>R. Des. Otávio do Amaral, 547 - Bigorrilho</p>
+                <p className="font-bold text-[11px] my-1">(41) 99593-7861 PIX</p>
+              </div>
             </div>
 
-            <button onClick={() => executeIframePrint(printOrderId)} className="px-10 py-5 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl shadow-2xl flex items-center space-x-3 active:scale-95 transition-all">
+            <button onClick={() => executeIframePrint(printOrderId)} className="px-10 py-5 bg-rose-600 text-white font-black uppercase tracking-widest rounded-2xl shadow-2xl flex items-center space-x-3 active:scale-95 transition-all mb-10">
               <i className="fa-solid fa-print"></i>
               <span>Imprimir Recibo</span>
             </button>
-            <p className="text-[10px] text-gray-400 font-bold uppercase mt-4 tracking-widest opacity-60">Pré-visualização da Via do Cliente</p>
           </div>
         )}
       </div>

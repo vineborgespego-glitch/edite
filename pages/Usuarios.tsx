@@ -2,9 +2,11 @@
 import React from 'react';
 import { User } from '../types';
 import { SUPABASE_URL, SUPABASE_KEY } from '../App';
-// Importação explícita para resolver erro de tipo no ambiente
-import { Link } from 'react-router-dom';
+// Fixed: Using namespace import and destructuring to bypass environment type resolution errors for react-router-dom
+import * as ReactRouterDOM from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle';
+
+const { Link } = ReactRouterDOM as any;
 
 interface UsuariosProps {
   users: User[];
