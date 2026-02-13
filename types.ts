@@ -17,6 +17,14 @@ export interface Transaction {
   tipo: 'receita' | 'despesa';
 }
 
+export interface TotalDiario {
+  created_at: string; // Usado como PK (data do dia)
+  valor_total: string;
+  descrições_serviços: string;
+  clientes: string;
+  pedidos_ids?: string;
+}
+
 export interface Order {
   id_pedido: number;
   id_cliente: string;
@@ -28,12 +36,12 @@ export interface Order {
 
 export interface OrderItem {
   id_item: number;
-  descreçao: string; // Conforme seu SQL
+  descreçao: string;
   quantidade: string;
   valor_unidade: string;
   total: string;
   id_pedido: string | number;
-  obicervação?: string; // Conforme seu SQL
+  obicervação?: string;
 }
 
 export interface Client {
@@ -51,4 +59,5 @@ export interface AppState {
   orderItems: OrderItem[];
   clients: Client[];
   users: User[];
+  totalDiario: TotalDiario[];
 }
